@@ -78,11 +78,11 @@ Definition of Done:
   dengan copy ramah sesuai standar customer service.
 - [x] `CONV-03` Implement FAQ router berbasis model intent dan confidence,
   termasuk fallback yang sopan dan terarah.
-- [ ] `CONV-04` Implement global commands: batal, menu, bantuan, mulai ulang.
-- [ ] `CONV-05` Implement extractor phone, customer ID tepat 10 digit, nominal
+- [x] `CONV-04` Implement global commands: batal, menu, bantuan, mulai ulang.
+- [x] `CONV-05` Implement extractor phone, customer ID tepat 10 digit, nominal
   budget, worker count, date, session, building type, dan ticket number
   `TKT-YYYYMMDD-XXXXXX`.
-- [ ] `CONV-06` Implement slot priority dan validation feedback yang tidak
+- [x] `CONV-06` Implement slot priority dan validation feedback yang tidak
   menyalahkan pengguna serta menyertakan format benar dan langkah berikutnya.
 - [ ] `CONV-07` Implement JSONL logger dengan masking PII.
 - [ ] `CONV-08` Persist dan restore conversation state/draft.

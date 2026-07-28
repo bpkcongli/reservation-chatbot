@@ -24,7 +24,7 @@ class StubPredictor:
 
 
 def id_factory() -> Iterator[str]:
-    for index in range(1, 20):
+    for index in range(1, 50):
         yield f"01K1A2B3C4D5E6F7G8H9J{index:04d}"
 
 
@@ -153,3 +153,114 @@ def test_start_reservation_intent_transitions_to_service_selection() -> None:
 
     assert result.context.state is ConversationState.SELECT_SERVICE
     assert [reply.value for reply in result.context.quick_replies] == ["borongan", "harian"]
+
+
+def test_help_has_priority_over_active_slot_and_preserves_progress() -> None:
+    service, _ = build_service()
+    created = service.create_conversation()
+    service.process_message(created.context.conversation_id, "reservation")
+    service.process_message(created.context.conversation_id, "borongan")
+    progressed = service.process_message(created.context.conversation_id, "0123456789")
+
+    helped = service.process_message(created.context.conversation_id, "bantuan")
+
+    assert progressed.context.state is ConversationState.BORONGAN_ASK_PHONE
+    assert helped.context.state is ConversationState.BORONGAN_ASK_PHONE
+    assert helped.context.collected_slots["customer_id"] == "0123456789"
+    assert "081234567890" in helped.new_messages[1].text
+    assert "mulai ulang" in helped.new_messages[1].text
+
+
+def test_cancel_clears_draft_without_creating_ticket() -> None:
+    service, _ = build_service()
+    created = service.create_conversation()
+    service.process_message(created.context.conversation_id, "reservation")
+    service.process_message(created.context.conversation_id, "harian")
+    service.process_message(created.context.conversation_id, "0123456789")
+
+    cancelled = service.process_message(created.context.conversation_id, "batal")
+
+    assert cancelled.context.state is ConversationState.CANCELLED
+    assert cancelled.context.collected_slots == {}
+    assert cancelled.context.ticket is None
+    assert "tidak ada tiket yang dibuat" in cancelled.new_messages[1].text
+
+
+def test_invalid_slot_keeps_state_and_previously_collected_slots() -> None:
+    service, repository = build_service()
+    created = service.create_conversation()
+    service.process_message(created.context.conversation_id, "reservation")
+    service.process_message(created.context.conversation_id, "borongan")
+    service.process_message(created.context.conversation_id, "0123456789")
+
+    with pytest.raises(ApplicationError) as error:
+        service.process_message(created.context.conversation_id, "12345")
+
+    restored = repository.get(created.context.conversation_id)
+    assert error.value.status_code == 422
+    assert error.value.detail.field == "phone_number"
+    assert "081234567890" in error.value.detail.message
+    assert restored is not None
+    assert restored.state is ConversationState.BORONGAN_ASK_PHONE
+    assert restored.collected_slots == {
+        "service_type": "borongan",
+        "customer_id": "0123456789",
+    }
+
+
+def test_borongan_slot_priority_reaches_confirmation_state() -> None:
+    service, _ = build_service()
+    created = service.create_conversation()
+    messages = (
+        "reservation",
+        "borongan",
+        "0123456789",
+        "0812 3456 7890",
+        "rumah",
+        "Jalan Melati No. 10 Jakarta",
+        "2 Agustus 2026",
+        "09:00",
+        "20 juta",
+    )
+
+    result = created
+    for message in messages:
+        result = service.process_message(created.context.conversation_id, message)
+
+    assert result.context.state is ConversationState.CONFIRM_RESERVATION
+    assert result.context.collected_slots == {
+        "service_type": "borongan",
+        "customer_id": "0123456789",
+        "phone_number": "+6281234567890",
+        "building_type": "rumah",
+        "survey_address": "Jalan Melati No. 10 Jakarta",
+        "survey_date": "2026-08-02",
+        "survey_time": "09:00",
+        "budget": 20_000_000,
+    }
+
+
+def test_harian_turn_can_fill_worker_dates_and_session_at_once() -> None:
+    service, _ = build_service()
+    created = service.create_conversation()
+    messages = (
+        "reservation",
+        "harian",
+        "0123456789",
+        "081234567890",
+        "pipa",
+        "Pipa dapur bocor sejak kemarin",
+    )
+    for message in messages:
+        service.process_message(created.context.conversation_id, message)
+
+    result = service.process_message(
+        created.context.conversation_id,
+        "dua tukang dari tanggal 2 sampai 3 Agustus 2026 sesi pagi",
+    )
+
+    assert result.context.state is ConversationState.HARIAN_ASK_PHOTO
+    assert result.context.collected_slots["worker_count"] == 2
+    assert result.context.collected_slots["start_date"] == "2026-08-02"
+    assert result.context.collected_slots["end_date"] == "2026-08-03"
+    assert result.context.collected_slots["work_session"] == "morning"

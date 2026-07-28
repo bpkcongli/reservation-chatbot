@@ -188,3 +188,33 @@ async def test_blank_message_is_rejected_without_advancing_history() -> None:
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "REQUEST_VALIDATION_ERROR"
     assert len(restored.json()["data"]["messages"]) == 1
+
+
+@pytest.mark.asyncio
+async def test_invalid_reservation_slot_returns_feedback_and_preserves_state() -> None:
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://test",
+    ) as client:
+        create_response = await client.post("/api/v1/conversations")
+        conversation_id = create_response.json()["data"]["conversation_id"]
+        await client.post(
+            f"/api/v1/conversations/{conversation_id}/messages",
+            json={"client_message_id": "web-message-101", "text": "reservation"},
+        )
+        await client.post(
+            f"/api/v1/conversations/{conversation_id}/messages",
+            json={"client_message_id": "web-message-102", "text": "borongan"},
+        )
+        response = await client.post(
+            f"/api/v1/conversations/{conversation_id}/messages",
+            json={"client_message_id": "web-message-103", "text": "123"},
+        )
+        restored = await client.get(f"/api/v1/conversations/{conversation_id}")
+
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "INVALID_SLOT"
+    assert response.json()["error"]["field"] == "customer_id"
+    assert "0123456789" in response.json()["error"]["message"]
+    assert restored.json()["data"]["state"] == "BORONGAN_ASK_CUSTOMER_ID"
+    assert restored.json()["data"]["collected_slots"] == {"service_type": "borongan"}
