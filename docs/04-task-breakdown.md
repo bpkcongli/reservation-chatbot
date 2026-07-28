@@ -106,10 +106,10 @@ Definition of Done:
 - [x] `RES-02` Implement schema/rule Tukang Harian.
 - [x] `PRICE-01` Implement calculator berdasarkan fixed rate `pricing-v1`
   untuk Harian dan Borongan beserta breakdown.
-- [ ] `RES-03` Implement summary, confirm, edit slot, dan cancel.
-- [ ] `TKT-01` Implement unique ticket number berformat
+- [x] `RES-03` Implement summary, confirm, edit slot, dan cancel.
+- [x] `TKT-01` Implement unique ticket number berformat
   `TKT-YYYYMMDD-XXXXXX` dan status.
-- [ ] `TKT-02` Implement ticket lookup.
+- [x] `TKT-02` Implement ticket lookup.
 - [ ] `UPL-01` Implement safe optional photo upload.
 - [ ] `RES-04` Transactionally create reservation + ticket only after
   confirmation.

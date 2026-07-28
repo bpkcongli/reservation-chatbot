@@ -104,6 +104,7 @@ GET  /api/v1/conversations/{conversation_id}
 POST /api/v1/conversations/{conversation_id}/messages
 GET  /api/v1/catalog/services
 GET  /api/v1/catalog/survey-slots?date_from=YYYY-MM-DD&date_to=YYYY-MM-DD
+GET  /api/v1/tickets/{ticket_number}
 ```
 
 Session, message history, dan reservation draft disimpan di MySQL sehingga
@@ -117,6 +118,13 @@ enam spesialisasi Tukang Harian, serta tiga sesi kerja. Slot survei demo
 dihasilkan secara deterministik pada pukul 09:00 dan 13:00. Aturan reservasi
 dan kalkulator backend menggunakan fixed rate `pricing-v1`; budget Borongan
 dicatat terpisah dan tidak mengubah total estimasi.
+
+Setelah seluruh slot valid, conversation mengembalikan ringkasan aman dan
+breakdown harga untuk konfirmasi. Pengguna dapat memilih slot yang ingin
+diubah; harga dihitung ulang dari backend bila input harga berubah. Konfirmasi
+dicatat tanpa membuat tiket lebih awal—finalisasi transaksional tetap menjadi
+boundary `RES-04`. Lookup tiket hanya mengembalikan ringkasan aman, status
+`MENUNGGU_PEMBAYARAN`, dan flag simulasi email `NOT_IMPLEMENTED`.
 
 Untuk migration baru:
 

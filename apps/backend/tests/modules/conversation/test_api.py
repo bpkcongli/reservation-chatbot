@@ -1,16 +1,24 @@
 from collections.abc import Iterator
+from datetime import UTC, datetime
 
 import pytest
 from app.main import app
+from app.modules.catalog.domain import ServiceType
 from app.modules.conversation.api import (
     get_conversation_logger,
     get_conversation_repository,
     get_intent_predictor,
+    get_ticket_lookup,
 )
 from app.modules.conversation.logger import NullConversationTurnLogger
 from app.modules.conversation.repository import InMemoryConversationRepository
 from app.modules.nlp.model import IntentPrediction
 from app.modules.nlp.taxonomy import Intent
+from app.modules.ticketing.domain import (
+    EmailDelivery,
+    TicketStatus,
+    TicketView,
+)
 from httpx import ASGITransport, AsyncClient
 
 
@@ -20,6 +28,20 @@ class StubPredictor:
 
     def predict(self, text: str, *, threshold: float | None = None) -> IntentPrediction:
         return self.prediction
+
+
+class StubTicketLookup:
+    def get(self, ticket_number: str) -> TicketView:
+        return TicketView(
+            ticket_number=ticket_number,
+            service_type=ServiceType.BORONGAN,
+            status=TicketStatus.MENUNGGU_PEMBAYARAN,
+            pricing_version="pricing-v1",
+            estimated_price=5_125_000,
+            budget=20_000_000,
+            created_at=datetime(2026, 7, 29, 9, 0, tzinfo=UTC),
+            email_delivery=EmailDelivery.NOT_IMPLEMENTED,
+        )
 
 
 @pytest.fixture(autouse=True)
@@ -44,9 +66,13 @@ def conversation_dependencies() -> Iterator[InMemoryConversationRepository]:
     async def override_logger() -> NullConversationTurnLogger:
         return NullConversationTurnLogger()
 
+    async def override_ticket_lookup() -> StubTicketLookup:
+        return StubTicketLookup()
+
     app.dependency_overrides[get_conversation_repository] = override_repository
     app.dependency_overrides[get_intent_predictor] = override_predictor
     app.dependency_overrides[get_conversation_logger] = override_logger
+    app.dependency_overrides[get_ticket_lookup] = override_ticket_lookup
     yield repository
     app.dependency_overrides.clear()
 

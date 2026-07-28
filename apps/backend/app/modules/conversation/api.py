@@ -29,8 +29,11 @@ from app.modules.conversation.service import (
     ConversationResult,
     ConversationService,
     IntentPredictor,
+    TicketLookup,
 )
 from app.modules.nlp.model import IntentModel, ModelArtifactError, load_intent_model
+from app.modules.ticketing.repository import SqlAlchemyTicketRepository
+from app.modules.ticketing.service import TicketService
 from app.shared.config import get_settings
 from app.shared.database import get_db_session
 from app.shared.errors import ApplicationError
@@ -76,6 +79,14 @@ async def get_intent_predictor() -> IntentModel:
     """Load and cache the versioned NLP model on first FAQ message."""
 
     return _load_intent_predictor()
+
+
+async def get_ticket_lookup(
+    session: Annotated[Session, Depends(get_db_session)],
+) -> TicketLookup:
+    """Return ticket lookup backed by the request database session."""
+
+    return TicketService(SqlAlchemyTicketRepository(session))
 
 
 def _message_data(message: ChatMessage) -> ChatMessageData:
@@ -150,11 +161,13 @@ async def send_message(
     repository: Annotated[ConversationRepository, Depends(get_conversation_repository)],
     predictor: Annotated[IntentPredictor, Depends(get_intent_predictor)],
     turn_logger: Annotated[ConversationTurnLogger, Depends(get_conversation_logger)],
+    ticket_lookup: Annotated[TicketLookup, Depends(get_ticket_lookup)],
 ) -> ConversationResponse:
     result = ConversationService(
         repository,
         predictor=predictor,
         turn_logger=turn_logger,
+        ticket_lookup=ticket_lookup,
         timezone=ZoneInfo(get_settings().app_timezone),
     ).process_message(
         conversation_id,

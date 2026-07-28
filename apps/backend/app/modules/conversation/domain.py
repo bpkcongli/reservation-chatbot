@@ -80,5 +80,6 @@ class ConversationContext:
     reservation_summary: dict[str, object] | None = None
     price_breakdown: dict[str, object] | None = None
     ticket: dict[str, object] | None = None
+    reservation_confirmed: bool = False
     last_intent: Intent | None = None
     last_confidence: float | None = None

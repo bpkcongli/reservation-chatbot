@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.modules.catalog.api import router as catalog_router
 from app.modules.conversation.api import router as conversation_router
+from app.modules.ticketing.api import router as ticket_router
 from app.shared.config import get_settings
 from app.shared.errors import register_error_handlers
 from app.shared.health import router as health_router
@@ -37,6 +38,7 @@ def create_app() -> FastAPI:
     application.include_router(health_router, prefix=settings.api_v1_prefix)
     application.include_router(catalog_router, prefix=settings.api_v1_prefix)
     application.include_router(conversation_router, prefix=settings.api_v1_prefix)
+    application.include_router(ticket_router, prefix=settings.api_v1_prefix)
     return application
 
 

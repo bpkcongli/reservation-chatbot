@@ -10,7 +10,13 @@ from fastapi import status
 
 from app.modules.conversation.commands import GlobalCommand, parse_global_command
 from app.modules.conversation.dialog import (
+    CONFIRMATION_REPLIES,
+    begin_slot_edit,
+    confirmation_prompt,
+    edit_prompt,
+    edit_replies,
     is_reservation_state,
+    parse_edit_field,
     process_reservation_turn,
     prompt_for_state,
     start_reservation,
@@ -46,6 +52,8 @@ from app.modules.conversation.logger import (
 from app.modules.conversation.repository import ConversationRepository
 from app.modules.nlp.model import IntentPrediction
 from app.modules.nlp.taxonomy import Intent
+from app.modules.reservation.summary import build_confirmation_snapshot
+from app.modules.ticketing.domain import TicketView
 from app.shared.errors import ApplicationError
 
 Clock = Callable[[], datetime]
@@ -58,6 +66,11 @@ class IntentPredictor(Protocol):
 
     def predict(self, text: str, *, threshold: float | None = None) -> IntentPrediction:
         """Return the top intent and runtime fallback decision."""
+
+
+class TicketLookup(Protocol):
+    def get(self, ticket_number: str) -> TicketView:
+        """Return a safe ticket view or raise an application error."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -82,6 +95,7 @@ class ConversationService:
         repository: ConversationRepository,
         *,
         predictor: IntentPredictor | None = None,
+        ticket_lookup: TicketLookup | None = None,
         turn_logger: ConversationTurnLogger | None = None,
         timezone: ZoneInfo = JAKARTA_TIMEZONE,
         clock: Clock = utc_now,
@@ -89,6 +103,7 @@ class ConversationService:
     ) -> None:
         self._repository = repository
         self._predictor = predictor
+        self._ticket_lookup = ticket_lookup
         self._turn_logger = turn_logger
         self._timezone = timezone
         self._clock = clock
@@ -166,6 +181,10 @@ class ConversationService:
         intent: Intent | None
         confidence: float | None
         collected_slots = dict(context.collected_slots)
+        reservation_summary = context.reservation_summary
+        price_breakdown = context.price_breakdown
+        ticket = context.ticket
+        reservation_confirmed = context.reservation_confirmed
         validation_field: str | None = None
 
         command = parse_global_command(text)
@@ -176,6 +195,15 @@ class ConversationService:
                 quick_replies,
                 collected_slots,
             ) = self._handle_global_command(context, command)
+            if command in {
+                GlobalCommand.CANCEL,
+                GlobalCommand.MENU,
+                GlobalCommand.RESTART,
+            }:
+                reservation_summary = None
+                price_breakdown = None
+                ticket = None
+                reservation_confirmed = False
             intent = None
             confidence = None
         elif is_reservation_state(context.state):
@@ -189,6 +217,18 @@ class ConversationService:
             quick_replies = decision.quick_replies
             collected_slots = decision.collected_slots
             validation_field = decision.validation_field
+            if validation_field is None and state in {
+                ConversationState.CALCULATE_PRICE,
+                ConversationState.CONFIRM_RESERVATION,
+            }:
+                reservation_summary, price_breakdown = build_confirmation_snapshot(
+                    collected_slots,
+                    today=now.astimezone(self._timezone).date(),
+                )
+                state = ConversationState.CONFIRM_RESERVATION
+                response_text = confirmation_prompt(str(collected_slots.get("service_type", "")))
+                quick_replies = CONFIRMATION_REPLIES
+                reservation_confirmed = False
             intent = None
             confidence = None
         elif context.state is ConversationState.SELECT_SERVICE and normalized in {
@@ -200,6 +240,10 @@ class ConversationService:
             response_text = decision.text
             quick_replies = decision.quick_replies
             collected_slots = decision.collected_slots
+            reservation_summary = None
+            price_breakdown = None
+            ticket = None
+            reservation_confirmed = False
             intent = Intent.START_RESERVATION
             confidence = 1.0
         elif context.state is ConversationState.SELECT_SERVICE:
@@ -211,13 +255,65 @@ class ConversationService:
             quick_replies = SELECT_SERVICE_REPLIES
             intent = None
             confidence = None
+        elif context.state is ConversationState.CONFIRM_RESERVATION:
+            service_type = str(context.collected_slots.get("service_type", ""))
+            edit_field = parse_edit_field(text, service_type)
+            if normalized in {"ya", "iya", "setuju", "konfirmasi"}:
+                state = ConversationState.CONFIRM_RESERVATION
+                response_text = (
+                    "Baik, konfirmasi Anda sudah tercatat. Data reservasi siap "
+                    "difinalisasi menjadi reservasi dan tiket."
+                )
+                quick_replies = ()
+                reservation_confirmed = True
+            elif normalized in {"ubah", "edit", "tidak"}:
+                state = ConversationState.EDIT_SLOT
+                response_text = edit_prompt(service_type)
+                quick_replies = edit_replies(service_type)
+                reservation_confirmed = False
+            elif edit_field is not None:
+                decision = begin_slot_edit(context, edit_field)
+                state = decision.state
+                response_text = decision.text
+                quick_replies = decision.quick_replies
+                collected_slots = decision.collected_slots
+                reservation_summary = None
+                price_breakdown = None
+                reservation_confirmed = False
+            else:
+                state = ConversationState.CONFIRM_RESERVATION
+                response_text = (
+                    "Maaf, pilihan konfirmasinya belum dikenali. Silakan pilih ya, "
+                    "ubah data, atau batal."
+                )
+                quick_replies = CONFIRMATION_REPLIES
+            intent = None
+            confidence = None
+        elif context.state is ConversationState.EDIT_SLOT:
+            service_type = str(context.collected_slots.get("service_type", ""))
+            edit_field = parse_edit_field(text, service_type)
+            if edit_field is None:
+                state = ConversationState.EDIT_SLOT
+                response_text = edit_prompt(service_type)
+                quick_replies = edit_replies(service_type)
+            else:
+                decision = begin_slot_edit(context, edit_field)
+                state = decision.state
+                response_text = decision.text
+                quick_replies = decision.quick_replies
+                collected_slots = decision.collected_slots
+                reservation_summary = None
+                price_breakdown = None
+                reservation_confirmed = False
+            intent = None
+            confidence = None
         elif context.state is ConversationState.TICKET_LOOKUP:
             ticket_number = extract_ticket_number(text)
-            state = ConversationState.TICKET_LOOKUP
-            quick_replies = ()
             intent = None
             confidence = None
             if ticket_number is None:
+                state = ConversationState.TICKET_LOOKUP
+                quick_replies = ()
                 response_text = (
                     "Maaf, nomor tiketnya belum sesuai. Format yang dapat digunakan: "
                     "TKT-YYYYMMDD-XXXXXX, misalnya TKT-20260728-AB12CD. Mohon masukkan "
@@ -225,10 +321,32 @@ class ConversationService:
                 )
                 validation_field = "ticket_number"
             else:
+                if self._ticket_lookup is None:
+                    raise ApplicationError(
+                        code="TICKET_SERVICE_UNAVAILABLE",
+                        message="Maaf, layanan pemeriksaan tiket sedang belum tersedia.",
+                        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                        retryable=True,
+                    )
+                found_ticket = self._ticket_lookup.get(ticket_number)
+                ticket = {
+                    "ticket_number": found_ticket.ticket_number,
+                    "service_type": found_ticket.service_type.value,
+                    "status": found_ticket.status.value,
+                    "pricing_version": found_ticket.pricing_version,
+                    "estimated_price": found_ticket.estimated_price,
+                    "budget": found_ticket.budget,
+                    "created_at": found_ticket.created_at.astimezone(self._timezone).isoformat(),
+                    "email_delivery": found_ticket.email_delivery.value,
+                }
                 collected_slots["ticket_number"] = ticket_number
+                state = ConversationState.INFO_MODE
+                quick_replies = INFO_MENU_REPLIES
                 response_text = (
-                    f"Baik, nomor tiket {ticket_number} sudah sesuai format. "
-                    "Pemeriksaan status tiket akan dilanjutkan pada langkah berikutnya."
+                    f"Tiket {ticket_number} ditemukan dengan status "
+                    f"{found_ticket.status.value}. Estimasi harga fixed adalah "
+                    f"Rp{found_ticket.estimated_price:,}. Pengiriman email masih "
+                    "berupa simulasi."
                 )
         elif normalized == "info":
             state = ConversationState.INFO_MODE
@@ -240,18 +358,21 @@ class ConversationService:
             state = ConversationState.SELECT_SERVICE
             response_text = SELECT_SERVICE_TEXT
             quick_replies = SELECT_SERVICE_REPLIES
+            reservation_summary = None
+            price_breakdown = None
+            ticket = None
+            reservation_confirmed = False
             intent = Intent.START_RESERVATION
             confidence = 1.0
-        elif context.state in {
-            ConversationState.CALCULATE_PRICE,
-            ConversationState.CONFIRM_RESERVATION,
-        }:
-            state = context.state
-            response_text = (
-                "Data reservasi sudah lengkap. Silakan ketik “batal”, “menu”, "
-                "“bantuan”, atau “mulai ulang” bila Anda ingin mengubah alur saat ini."
+        elif context.state is ConversationState.CALCULATE_PRICE:
+            reservation_summary, price_breakdown = build_confirmation_snapshot(
+                collected_slots,
+                today=now.astimezone(self._timezone).date(),
             )
-            quick_replies = ()
+            state = ConversationState.CONFIRM_RESERVATION
+            response_text = confirmation_prompt(str(collected_slots.get("service_type", "")))
+            quick_replies = CONFIRMATION_REPLIES
+            reservation_confirmed = False
             intent = None
             confidence = None
         else:
@@ -269,6 +390,10 @@ class ConversationService:
             quick_replies=quick_replies,
             updated_at=now,
             collected_slots=collected_slots,
+            reservation_summary=reservation_summary,
+            price_breakdown=price_breakdown,
+            ticket=ticket,
+            reservation_confirmed=reservation_confirmed,
             last_intent=intent,
             last_confidence=confidence,
         )

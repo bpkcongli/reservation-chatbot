@@ -2,6 +2,7 @@ from collections.abc import Iterator
 from datetime import UTC, datetime
 
 import pytest
+from app.modules.catalog.domain import ServiceType
 from app.modules.conversation.domain import ConversationState, MessageSender
 from app.modules.conversation.faq import FALLBACK_TEXT, WELCOME_TEXT
 from app.modules.conversation.logger import ConversationTurnEvent
@@ -9,6 +10,11 @@ from app.modules.conversation.repository import InMemoryConversationRepository
 from app.modules.conversation.service import ConversationService
 from app.modules.nlp.model import IntentPrediction
 from app.modules.nlp.taxonomy import Intent
+from app.modules.ticketing.domain import (
+    EmailDelivery,
+    TicketStatus,
+    TicketView,
+)
 from app.shared.errors import ApplicationError
 
 FIXED_NOW = datetime(2026, 7, 29, 9, 0, tzinfo=UTC)
@@ -32,6 +38,15 @@ class CapturingTurnLogger:
         self.events.append(event)
 
 
+class StubTicketLookup:
+    def __init__(self, ticket: TicketView) -> None:
+        self.ticket = ticket
+
+    def get(self, ticket_number: str) -> TicketView:
+        assert ticket_number == self.ticket.ticket_number
+        return self.ticket
+
+
 def id_factory() -> Iterator[str]:
     for index in range(1, 50):
         yield f"01K1A2B3C4D5E6F7G8H9J{index:04d}"
@@ -41,6 +56,7 @@ def build_service(
     *,
     predictor: StubPredictor | None = None,
     turn_logger: CapturingTurnLogger | None = None,
+    ticket_lookup: StubTicketLookup | None = None,
 ) -> tuple[ConversationService, InMemoryConversationRepository]:
     identifiers = id_factory()
     repository = InMemoryConversationRepository()
@@ -48,6 +64,7 @@ def build_service(
         repository,
         predictor=predictor,
         turn_logger=turn_logger,
+        ticket_lookup=ticket_lookup,
         clock=lambda: FIXED_NOW,
         id_factory=lambda _: next(identifiers),
     )
@@ -249,6 +266,119 @@ def test_borongan_slot_priority_reaches_confirmation_state() -> None:
         "survey_time": "09:00",
         "budget": 20_000_000,
     }
+    assert result.context.reservation_summary is not None
+    assert result.context.reservation_summary["phone_number_masked"] == "+62812****7890"
+    assert result.context.price_breakdown is not None
+    assert result.context.price_breakdown["estimated_price"] == 5_125_000
+    assert [reply.value for reply in result.context.quick_replies] == ["ya", "ubah", "batal"]
+
+
+def test_confirmation_can_edit_building_and_recalculate_price() -> None:
+    service, _ = build_service()
+    created = service.create_conversation()
+    for message in (
+        "reservation",
+        "borongan",
+        "0123456789",
+        "081234567890",
+        "rumah",
+        "Jalan Melati No. 10 Jakarta",
+        "2 Agustus 2026",
+        "09:00",
+        "20 juta",
+    ):
+        service.process_message(created.context.conversation_id, message)
+
+    edit_menu = service.process_message(created.context.conversation_id, "ubah")
+    edit_field = service.process_message(
+        created.context.conversation_id,
+        "ubah:building_type",
+    )
+    updated = service.process_message(created.context.conversation_id, "ruko")
+
+    assert edit_menu.context.state is ConversationState.EDIT_SLOT
+    assert edit_field.context.state is ConversationState.BORONGAN_ASK_BUILDING
+    assert "building_type" not in edit_field.context.collected_slots
+    assert edit_field.context.reservation_summary is None
+    assert updated.context.state is ConversationState.CONFIRM_RESERVATION
+    assert updated.context.collected_slots["building_type"] == "ruko"
+    assert updated.context.price_breakdown is not None
+    assert updated.context.price_breakdown["estimated_price"] == 7_625_000
+
+
+def test_yes_records_confirmation_without_creating_ticket_before_finalization() -> None:
+    service, _ = build_service()
+    created = service.create_conversation()
+    for message in (
+        "reservation",
+        "borongan",
+        "0123456789",
+        "081234567890",
+        "rumah",
+        "Jalan Melati No. 10 Jakarta",
+        "2 Agustus 2026",
+        "09:00",
+        "20 juta",
+    ):
+        service.process_message(created.context.conversation_id, message)
+
+    confirmed = service.process_message(created.context.conversation_id, "ya")
+
+    assert confirmed.context.state is ConversationState.CONFIRM_RESERVATION
+    assert confirmed.context.reservation_confirmed is True
+    assert confirmed.context.ticket is None
+    assert "siap difinalisasi" in confirmed.new_messages[1].text
+
+
+def test_cancel_from_confirmation_clears_summary_and_price() -> None:
+    service, _ = build_service()
+    created = service.create_conversation()
+    for message in (
+        "reservation",
+        "borongan",
+        "0123456789",
+        "081234567890",
+        "rumah",
+        "Jalan Melati No. 10 Jakarta",
+        "2 Agustus 2026",
+        "09:00",
+        "20 juta",
+    ):
+        service.process_message(created.context.conversation_id, message)
+
+    cancelled = service.process_message(created.context.conversation_id, "batal")
+
+    assert cancelled.context.state is ConversationState.CANCELLED
+    assert cancelled.context.reservation_summary is None
+    assert cancelled.context.price_breakdown is None
+    assert cancelled.context.ticket is None
+
+
+def test_ticket_status_flow_returns_lookup_result() -> None:
+    ticket = TicketView(
+        ticket_number="TKT-20260729-AB12CD",
+        service_type=ServiceType.BORONGAN,
+        status=TicketStatus.MENUNGGU_PEMBAYARAN,
+        pricing_version="pricing-v1",
+        estimated_price=5_125_000,
+        budget=20_000_000,
+        created_at=FIXED_NOW,
+        email_delivery=EmailDelivery.NOT_IMPLEMENTED,
+    )
+    service, _ = build_service(ticket_lookup=StubTicketLookup(ticket))
+    created = service.create_conversation()
+
+    lookup_prompt = service.process_message(created.context.conversation_id, "status")
+    result = service.process_message(
+        created.context.conversation_id,
+        "tkt-20260729-ab12cd",
+    )
+
+    assert lookup_prompt.context.state is ConversationState.TICKET_LOOKUP
+    assert result.context.state is ConversationState.INFO_MODE
+    assert result.context.ticket is not None
+    assert result.context.ticket["status"] == "MENUNGGU_PEMBAYARAN"
+    assert "TKT-20260729-AB12CD" in result.new_messages[1].text
 
 
 def test_harian_turn_can_fill_worker_dates_and_session_at_once() -> None:

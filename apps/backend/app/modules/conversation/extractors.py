@@ -5,9 +5,9 @@ from datetime import date, timedelta
 from decimal import Decimal, InvalidOperation
 
 from app.modules.catalog.domain import Specialization
+from app.modules.ticketing.domain import normalize_ticket_number
 
 CUSTOMER_ID_PATTERN = re.compile(r"^[0-9]{10}$")
-TICKET_NUMBER_PATTERN = re.compile(r"^TKT-[0-9]{8}-[A-Z0-9]{6}$")
 
 _MONTHS = {
     "januari": 1,
@@ -276,5 +276,4 @@ def extract_survey_time(text: str) -> str | None:
 def extract_ticket_number(text: str) -> str | None:
     """Normalize case and require the complete canonical ticket format."""
 
-    candidate = text.strip().upper()
-    return candidate if TICKET_NUMBER_PATTERN.fullmatch(candidate) else None
+    return normalize_ticket_number(text)

@@ -97,6 +97,7 @@ def _context_payload(context: ConversationContext) -> dict[str, object]:
         "reservation_summary": _json_safe(context.reservation_summary),
         "price_breakdown": _json_safe(context.price_breakdown),
         "ticket": _json_safe(context.ticket),
+        "reservation_confirmed": context.reservation_confirmed,
         "last_intent": context.last_intent.value if context.last_intent is not None else None,
         "last_confidence": context.last_confidence,
     }
@@ -185,6 +186,7 @@ class SqlAlchemyConversationRepository:
                 payload.get("price_breakdown"),
             ),
             ticket=cast(dict[str, object] | None, payload.get("ticket")),
+            reservation_confirmed=bool(payload.get("reservation_confirmed", False)),
             last_intent=Intent(str(last_intent_value)) if last_intent_value is not None else None,
             last_confidence=(
                 float(last_confidence_value) if last_confidence_value is not None else None

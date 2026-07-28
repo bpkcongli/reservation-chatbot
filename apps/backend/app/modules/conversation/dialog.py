@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import date
 
+from app.modules.catalog.domain import SURVEY_TIMES
 from app.modules.conversation.domain import (
     ConversationContext,
     ConversationState,
@@ -41,6 +42,61 @@ HARIAN_FLOW = (
     ("problem_photo", ConversationState.HARIAN_ASK_PHOTO),
     ("work_address", ConversationState.HARIAN_ASK_ADDRESS),
 )
+
+CONFIRMATION_REPLIES = (
+    QuickReply(label="Ya, konfirmasi", value="ya"),
+    QuickReply(label="Ubah data", value="ubah"),
+    QuickReply(label="Batalkan", value="batal"),
+)
+
+_EDIT_LABELS = {
+    "customer_id": "ID pelanggan",
+    "phone_number": "nomor telepon",
+    "building_type": "jenis bangunan",
+    "survey_address": "alamat survei",
+    "survey_date": "tanggal survei",
+    "survey_time": "waktu survei",
+    "budget": "budget",
+    "specialization": "spesialisasi",
+    "problem_description": "deskripsi pekerjaan",
+    "worker_count": "jumlah tukang",
+    "start_date": "tanggal mulai",
+    "end_date": "tanggal selesai",
+    "work_session": "sesi kerja",
+    "problem_photo": "foto kendala",
+    "work_address": "alamat pekerjaan",
+}
+
+_EDIT_ALIASES = {
+    "id": "customer_id",
+    "id pelanggan": "customer_id",
+    "customer id": "customer_id",
+    "nomor telepon": "phone_number",
+    "telepon": "phone_number",
+    "kontak": "phone_number",
+    "jenis bangunan": "building_type",
+    "bangunan": "building_type",
+    "alamat survei": "survey_address",
+    "tanggal survei": "survey_date",
+    "waktu survei": "survey_time",
+    "jam survei": "survey_time",
+    "budget": "budget",
+    "anggaran": "budget",
+    "spesialisasi": "specialization",
+    "deskripsi": "problem_description",
+    "deskripsi pekerjaan": "problem_description",
+    "kendala": "problem_description",
+    "jumlah tukang": "worker_count",
+    "jumlah pekerja": "worker_count",
+    "tanggal mulai": "start_date",
+    "tanggal selesai": "end_date",
+    "sesi": "work_session",
+    "sesi kerja": "work_session",
+    "foto": "problem_photo",
+    "foto kendala": "problem_photo",
+    "alamat": "work_address",
+    "alamat pekerjaan": "work_address",
+}
 
 _PROMPTS: dict[ConversationState, str] = {
     ConversationState.BORONGAN_ASK_CUSTOMER_ID: (
@@ -171,6 +227,62 @@ def is_reservation_state(state: ConversationState) -> bool:
     """Whether a state belongs to active slot collection."""
 
     return state in _STATE_SLOT
+
+
+def confirmation_prompt(service_type: str) -> str:
+    service_label = "Jasa Borongan" if service_type == "borongan" else "Tukang Harian"
+    return (
+        f"Terima kasih, seluruh data {service_label} sudah lengkap. "
+        "Silakan periksa ringkasan dan estimasi harga, lalu pilih konfirmasi, "
+        "ubah data, atau batalkan."
+    )
+
+
+def edit_replies(service_type: str) -> tuple[QuickReply, ...]:
+    flow = BORONGAN_FLOW if service_type == "borongan" else HARIAN_FLOW
+    return tuple(QuickReply(label=_EDIT_LABELS[field], value=f"ubah:{field}") for field, _ in flow)
+
+
+def edit_prompt(service_type: str) -> str:
+    options = ", ".join(reply.label for reply in edit_replies(service_type))
+    return f"Baik, data mana yang ingin diubah? Pilih salah satu: {options}."
+
+
+def parse_edit_field(text: str, service_type: str) -> str | None:
+    normalized = " ".join(text.casefold().strip().replace("_", " ").split())
+    if normalized.startswith("ubah:"):
+        candidate = normalized.removeprefix("ubah:").replace(" ", "_")
+    else:
+        candidate = normalized
+        for prefix in ("ubah ", "edit "):
+            if candidate.startswith(prefix):
+                candidate = candidate.removeprefix(prefix)
+                break
+        candidate = _EDIT_ALIASES.get(candidate, candidate.replace(" ", "_"))
+
+    flow = BORONGAN_FLOW if service_type == "borongan" else HARIAN_FLOW
+    editable_fields = {field for field, _ in flow}
+    return candidate if candidate in editable_fields else None
+
+
+def begin_slot_edit(context: ConversationContext, field: str) -> DialogDecision:
+    service_type = str(context.collected_slots.get("service_type", ""))
+    flow = BORONGAN_FLOW if service_type == "borongan" else HARIAN_FLOW
+    state_by_field = dict(flow)
+    if field not in state_by_field:
+        raise ValueError(f"Field {field!r} is not editable for {service_type!r}.")
+
+    slots = dict(context.collected_slots)
+    slots.pop(field, None)
+    if field == "start_date":
+        slots.pop("end_date", None)
+    state = state_by_field[field]
+    return DialogDecision(
+        state=state,
+        text=f"Baik, mari perbarui {_EDIT_LABELS[field]}. {_PROMPTS[state]}",
+        quick_replies=replies_for_state(state),
+        collected_slots=slots,
+    )
 
 
 def start_reservation(service_type: str) -> DialogDecision:
@@ -334,9 +446,8 @@ def _validate_current_slot(
     if field == "survey_time":
         if value is None:
             return field, "waktu surveinya belum dapat dikenali", "09:00"
-        hour = int(str(value).split(":", maxsplit=1)[0])
-        if not 8 <= hour <= 17:
-            return field, "waktu surveinya perlu berada pada jam 08:00-17:00", "09:00"
+        if value not in SURVEY_TIMES:
+            return field, "waktu surveinya belum termasuk slot yang tersedia", "09:00 atau 13:00"
     if field == "budget" and (not isinstance(value, int) or value < 1):
         return (
             field,
