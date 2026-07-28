@@ -4,6 +4,8 @@ import re
 from datetime import date, timedelta
 from decimal import Decimal, InvalidOperation
 
+from app.modules.catalog.domain import Specialization
+
 CUSTOMER_ID_PATTERN = re.compile(r"^[0-9]{10}$")
 TICKET_NUMBER_PATTERN = re.compile(r"^TKT-[0-9]{8}-[A-Z0-9]{6}$")
 
@@ -34,7 +36,7 @@ _NUMBER_WORDS = {
     "sembilan": 9,
     "sepuluh": 10,
 }
-_SPECIALIZATIONS = ("cat", "genteng", "ac", "listrik", "keramik", "pipa")
+_SPECIALIZATIONS = tuple(specialization.value for specialization in Specialization)
 
 
 def extract_customer_id(text: str) -> str | None:

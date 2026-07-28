@@ -102,6 +102,8 @@ Conversation core menyediakan endpoint berikut:
 POST /api/v1/conversations
 GET  /api/v1/conversations/{conversation_id}
 POST /api/v1/conversations/{conversation_id}/messages
+GET  /api/v1/catalog/services
+GET  /api/v1/catalog/survey-slots?date_from=YYYY-MM-DD&date_to=YYYY-MM-DD
 ```
 
 Session, message history, dan reservation draft disimpan di MySQL sehingga
@@ -109,6 +111,12 @@ dapat dipulihkan setelah backend restart. Setiap user turn juga ditulis sebagai
 event ter-mask ke `data/logs/conversations-YYYY-MM-DD.jsonl`. FAQ free-text
 memakai model intent beserta confidence threshold; input ber-confidence rendah
 dikembalikan sebagai state `FALLBACK` dengan pilihan topik terarah.
+
+Katalog aktif disimpan di MySQL melalui migration dan mencakup dua layanan,
+enam spesialisasi Tukang Harian, serta tiga sesi kerja. Slot survei demo
+dihasilkan secara deterministik pada pukul 09:00 dan 13:00. Aturan reservasi
+dan kalkulator backend menggunakan fixed rate `pricing-v1`; budget Borongan
+dicatat terpisah dan tidak mengubah total estimasi.
 
 Untuk migration baru:
 

@@ -99,12 +99,12 @@ Definition of Done:
 
 ### M3 — Catalog, reservation, pricing, ticketing
 
-- [ ] `CAT-01` Definisikan seed service, specialization, work session, dan
+- [x] `CAT-01` Definisikan seed service, specialization, work session, dan
   survey availability. Seed spesialisasi Tukang Harian wajib mencakup `cat`,
   `genteng`, `ac`, `listrik`, `keramik`, dan `pipa`.
-- [ ] `RES-01` Implement schema/rule Jasa Borongan.
-- [ ] `RES-02` Implement schema/rule Tukang Harian.
-- [ ] `PRICE-01` Implement calculator berdasarkan fixed rate `pricing-v1`
+- [x] `RES-01` Implement schema/rule Jasa Borongan.
+- [x] `RES-02` Implement schema/rule Tukang Harian.
+- [x] `PRICE-01` Implement calculator berdasarkan fixed rate `pricing-v1`
   untuk Harian dan Borongan beserta breakdown.
 - [ ] `RES-03` Implement summary, confirm, edit slot, dan cancel.
 - [ ] `TKT-01` Implement unique ticket number berformat
