@@ -73,10 +73,10 @@ Definition of Done:
 
 ### M2 — Conversation core
 
-- [ ] `CONV-01` Definisikan enum state, conversation context, dan response DTO.
-- [ ] `CONV-02` Implement session create/get dan prompt pembuka dua pilihan
+- [x] `CONV-01` Definisikan enum state, conversation context, dan response DTO.
+- [x] `CONV-02` Implement session create/get dan prompt pembuka dua pilihan
   dengan copy ramah sesuai standar customer service.
-- [ ] `CONV-03` Implement FAQ router berbasis model intent dan confidence,
+- [x] `CONV-03` Implement FAQ router berbasis model intent dan confidence,
   termasuk fallback yang sopan dan terarah.
 - [ ] `CONV-04` Implement global commands: batal, menu, bantuan, mulai ulang.
 - [ ] `CONV-05` Implement extractor phone, customer ID tepat 10 digit, nominal

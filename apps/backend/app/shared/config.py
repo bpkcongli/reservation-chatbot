@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     database_url: str = (
         "mysql+pymysql://reservation_app:reservation_app@127.0.0.1:3306/reservation_chatbot"
     )
+    model_path: Path = REPOSITORY_ROOT / "artifacts" / "models" / "intent-classifier.joblib"
 
 
 @lru_cache

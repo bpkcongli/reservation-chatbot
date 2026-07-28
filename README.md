@@ -84,6 +84,19 @@ Loader runtime tersedia melalui
 sumber lokal yang dipercaya; loader memverifikasi checksum artifact terhadap
 metadata sebelum inference.
 
+Conversation core menyediakan endpoint berikut:
+
+```text
+POST /api/v1/conversations
+GET  /api/v1/conversations/{conversation_id}
+POST /api/v1/conversations/{conversation_id}/messages
+```
+
+Session conversation masih disimpan dalam memory process. Persistensi dan
+restore lintas restart akan ditambahkan pada task `CONV-08`. FAQ free-text
+memakai model intent beserta confidence threshold; input ber-confidence rendah
+dikembalikan sebagai state `FALLBACK` dengan pilihan topik terarah.
+
 Untuk migration baru:
 
 ```bash
