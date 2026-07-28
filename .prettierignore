@@ -1,0 +1,7 @@
+.next
+node_modules
+apps/backend/uv.lock
+artifacts
+data
+docs
+storage

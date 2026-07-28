@@ -1,11 +1,93 @@
 # Reservation Chatbot
 
-Web chatbot untuk bertanya tentang layanan tukang dan melakukan reservasi
-Jasa Borongan atau Tukang Harian. Project ini disiapkan sebagai UAS mata
-kuliah Natural Language Processing.
+Monorepo web chatbot untuk bertanya tentang layanan tukang dan melakukan
+reservasi Jasa Borongan atau Tukang Harian. Project ini disiapkan sebagai UAS
+mata kuliah Natural Language Processing.
 
-Saat ini repository berada pada fase perencanaan. Dokumentasi berikut menjadi
-acuan sebelum development dimulai:
+## Stack
+
+- Frontend: Next.js 16 App Router, React 19, TypeScript strict, Tailwind CSS,
+  shadcn/ui, dan Bun.
+- Backend: Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2, Alembic, dan `uv`.
+- Database: MySQL 8.4 melalui Docker Compose.
+- Quality: Ruff, mypy, pytest, ESLint, Prettier, Vitest, Husky, lint-staged,
+  dan GitHub Actions.
+
+## Prasyarat
+
+- Python 3.12
+- [uv](https://docs.astral.sh/uv/)
+- Bun 1.3
+- Docker dengan Compose plugin
+
+## Setup
+
+```bash
+cp .env.example .env
+make install
+make db-up
+make migrate
+```
+
+Tunggu container MySQL berstatus sehat sebelum menjalankan migration. Nilai
+default dalam `.env.example` hanya untuk development lokal dan harus diganti
+pada environment lain.
+
+## Menjalankan aplikasi
+
+Jalankan backend dan frontend pada terminal terpisah:
+
+```bash
+make dev-backend
+make dev-frontend
+```
+
+- Frontend: <http://localhost:3000>
+- OpenAPI: <http://localhost:8000/docs>
+- Liveness: <http://localhost:8000/api/v1/health>
+- Readiness: <http://localhost:8000/api/v1/ready>
+
+`/health` hanya menandakan process API hidup. `/ready` melakukan query ringan
+ke database dan memberikan HTTP 503 dengan error envelope terstruktur bila
+database belum siap.
+
+## Developer commands
+
+```bash
+make lint          # Ruff dan ESLint
+make format        # Ruff formatter dan Prettier
+make format-check  # verifikasi formatting tanpa mengubah file
+make typecheck     # mypy strict dan TypeScript strict
+make test          # pytest dan Vitest
+make build         # Next.js production build
+make check         # semua quality gate di atas
+make db-logs       # ikuti log MySQL
+make db-down       # hentikan service Docker Compose
+```
+
+Untuk migration baru:
+
+```bash
+make migration message="describe_change"
+make migrate
+```
+
+Husky menjalankan lint-staged sebelum commit. CI menjalankan lint, format
+check, typecheck, test, dan frontend production build pada setiap push dan
+pull request.
+
+## Struktur repository
+
+```text
+apps/backend/   FastAPI, shared infrastructure, modules, migrations, tests
+apps/frontend/  Next.js App Router, shadcn/ui baseline, tests
+data/           raw/processed dataset dan runtime conversation logs
+artifacts/      model serta evaluation output
+storage/        runtime upload
+docs/           perencanaan, arsitektur, dan traceability UAS
+```
+
+Dokumentasi perencanaan:
 
 - [Documentation index](docs/README.md)
 - [MVP plan](docs/01-mvp-plan.md)
@@ -13,14 +95,7 @@ acuan sebelum development dimulai:
 - [NLP and dialog design](docs/03-nlp-and-dialog-design.md)
 - [Task breakdown](docs/04-task-breakdown.md)
 - [UAS traceability matrix](docs/05-uas-traceability.md)
-
-Keputusan stack utama:
-
-- Frontend: Next.js 16 App Router, TypeScript, Tailwind CSS, shadcn/ui, Bun.
-- Backend: Python 3.12, FastAPI, scikit-learn, pandas, Pydantic, SQLAlchemy.
-- NLP: TF-IDF + Logistic Regression dan rule-based slot filling.
-- Storage: MySQL untuk data aplikasi serta JSONL untuk log percakapan.
-
-> Belum ada kode aplikasi pada fase ini. Nilai harga, slot jadwal, dan aturan
-> bisnis yang belum diberikan akan diperlakukan sebagai konfigurasi/asumsi MVP,
-> bukan sebagai kebijakan bisnis final.
+- [API contract convention](docs/api-contract/README.md)
+- [OpenAPI contract](docs/api-contract/openapi.yml)
+- [Sequence diagram](docs/diagram/sequence-diagram.md)
+- [Entity Relationship Diagram](docs/diagram/erd.md)

@@ -13,6 +13,17 @@ Dokumentasi ini adalah source of truth untuk fase MVP `reservation-chatbot`.
    of Done.
 5. [UAS traceability](05-uas-traceability.md) — pemetaan artefak ke P1–P5.
 
+## Kontrak dan diagram
+
+- [API contract convention](api-contract/README.md) — success/error envelope
+  dan application code yang digunakan project.
+- [OpenAPI contract](api-contract/openapi.yml) — kontrak normatif endpoint dan
+  schema.
+- [Sequence diagram](diagram/sequence-diagram.md) — interaksi session, FAQ,
+  reservasi Harian/Borongan, upload, restore, dan lookup tiket.
+- [Entity Relationship Diagram](diagram/erd.md) — model relational, data
+  dictionary, constraint, dan index.
+
 ## Prinsip perencanaan
 
 - MVP harus dapat didemokan end-to-end tanpa layanan eksternal berbayar.

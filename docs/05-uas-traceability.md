@@ -7,7 +7,9 @@ requirement, bukan hanya menghasilkan aplikasi yang berjalan.
 |---|---|---|---|
 | P1 | Masalah nyata | Problem statement dan target user di MVP plan | `DOC-08` |
 | P1 | Kebutuhan fungsional | Scope informasi, dua reservasi, tiket | `RES-*`, `WEB-*` |
-| P1 | Flow dialog/state diagram | Mermaid general, Borongan, Harian | `CONV-01` |
+| P1 | Flow dialog/state diagram | State machine dan sequence diagram untuk FAQ, Borongan, Harian, restore, upload, serta tiket | `CONV-01` |
+| P1 | Kontrak integrasi | OpenAPI 3.1 untuk 10 endpoint MVP dengan success/error envelope `status`/`data` | `FND-08`, `CONV-*`, `RES-*` |
+| P1 | Struktur persistence | ERD, data dictionary, constraint, dan transaction boundary | `FND-07`, `RES-04` |
 | P1 | Struktur dataset intent | CSV schema dan taxonomy 8 intent | `NLP-01..03` |
 | P1 | Struktur log percakapan | JSONL event schema | `CONV-07` |
 | P2 | Minimal 200 data | Target 240 utterance | `NLP-02` |
@@ -18,6 +20,7 @@ requirement, bukan hanya menghasilkan aplikasi yang berjalan.
 | P2 | Contoh sebelum/sesudah | `preprocessing-examples.csv` | `NLP-06` |
 | P3 | Intent classification | Logistic Regression pipeline | `NLP-07`, `CONV-03` |
 | P3 | Rule-based slot filling | Regex/pattern dan state-aware extractor | `CONV-05..06` |
+| P3 | Validasi identifier | Customer ID tepat 10 digit dan tiket `TKT-YYYYMMDD-XXXXXX` | `CONV-05..06`, `TKT-01` |
 | P3 | Multi-turn | Persisted finite state machine | `CONV-01..09` |
 | P3 | Minimal satu konfirmasi | Summary → ya/ubah/batal | `RES-03..04` |
 | P4 | Accuracy | `metrics.json` | `NLP-09` |
@@ -31,6 +34,7 @@ requirement, bukan hanya menghasilkan aplikasi yang berjalan.
 | P5 | Log CSV/JSON | Masked JSONL per turn | `CONV-07`, `DOC-06` |
 | Tambahan | Landing page | Hero, layanan, cara kerja, CTA | `WEB-01` |
 | Tambahan | Bukti reservasi | Ticket card number/status | `TKT-*`, `WEB-07` |
+| Tambahan | Harga demo | Fixed rate `pricing-v1` dan backend price breakdown | `PRICE-01`, `WEB-07` |
 
 ## Checklist evidence akhir
 

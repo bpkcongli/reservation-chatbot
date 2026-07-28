@@ -35,6 +35,10 @@ flowchart LR
     R --> FS[(Local photo storage)]
 ```
 
+Urutan interaksi end-to-end, termasuk fallback NLP, kedua jenis reservasi,
+upload, restore session, dan lookup tiket tersedia pada
+[sequence diagram](diagram/sequence-diagram.md).
+
 ## 2. Tech stack
 
 ### Backend
@@ -145,7 +149,7 @@ sebagai bukti UAS setelah model dilatih.
 | `conversation` | State machine, next prompt, fallback, context/session, log turn | Menyimpan transaksi final langsung |
 | `catalog` | Jenis layanan, spesialisasi, sesi, available survey slots | Kalkulasi total |
 | `reservation` | Validasi slot lintas field, draft dan final reservation | Klasifikasi intent |
-| `pricing` | Aturan estimasi harga harian | Membuat tiket |
+| `pricing` | Fixed rate versioned, kalkulasi Harian/Borongan, dan breakdown | Membuat tiket |
 | `ticketing` | Nomor tiket, status lifecycle, lookup | Mengirim email nyata |
 | `shared` | Config, DB session, error model, clock/ID abstraction | Business rule spesifik |
 
@@ -165,6 +169,11 @@ untuk MVP.
 
 Base path: `/api/v1`.
 
+Definisi endpoint, parameter, request/response schema, status code, enum, dan
+error response yang normatif berada pada
+[OpenAPI contract](api-contract/openapi.yml). Tabel berikut adalah ringkasan
+untuk membantu pembacaan arsitektur.
+
 ### Endpoints
 
 | Method | Path | Fungsi |
@@ -172,109 +181,40 @@ Base path: `/api/v1`.
 | `GET` | `/health` | Liveness sederhana |
 | `GET` | `/ready` | Cek DB dan model sudah dimuat |
 | `POST` | `/conversations` | Membuat session dan memperoleh prompt awal |
-| `POST` | `/conversations/{id}/messages` | Mengirim teks/quick reply dan mendapat respons berikutnya |
-| `GET` | `/conversations/{id}` | Memulihkan message dan state session |
-| `POST` | `/conversations/{id}/attachments` | Upload foto masalah untuk draft aktif |
+| `POST` | `/conversations/{conversation_id}/messages` | Mengirim teks/quick reply dan mendapat respons berikutnya |
+| `GET` | `/conversations/{conversation_id}` | Memulihkan message dan state session |
+| `POST` | `/conversations/{conversation_id}/attachments` | Upload foto masalah untuk draft aktif |
 | `GET` | `/catalog/services` | Katalog layanan dan spesialisasi |
 | `GET` | `/catalog/survey-slots` | Pilihan tanggal/jam survei |
 | `GET` | `/tickets/{ticket_number}` | Melihat ringkasan dan status tiket |
 | `GET` | `/nlp/model-info` | Metadata model/dataset untuk demo UAS |
 
-Contoh response message:
-
-```json
-{
-  "conversation_id": "01J...",
-  "state": "HARIAN_ASK_SPECIALIZATION",
-  "messages": [
-    {
-      "id": "01J...",
-      "sender": "bot",
-      "text": "Spesialisasi tukang apa yang Anda butuhkan?"
-    }
-  ],
-  "quick_replies": [
-    {"label": "Listrik", "value": "listrik"},
-    {"label": "Plumbing", "value": "plumbing"}
-  ],
-  "collected_slots": {
-    "service_type": "harian"
-  },
-  "ticket": null,
-  "error": null
-}
-```
-
-Frontend tidak menentukan `state` berikutnya dan tidak mengirim total harga.
-
-### Error envelope
-
-```json
-{
-  "error": {
-    "code": "INVALID_SLOT_VALUE",
-    "message": "Tanggal selesai tidak boleh sebelum tanggal mulai.",
-    "field": "end_date",
-    "retryable": true
-  }
-}
-```
+Response berhasil menggunakan root `status` dan object `data`; response chat
+menempatkan snapshot pada `data` melalui `ConversationResponse`. Kegagalan
+level HTTP hanya memiliki `status` melalui `ErrorResponse`. Adaptasi ini tidak
+memakai `traceId` atau metadata pagination karena belum dibutuhkan. Frontend
+tidak menentukan `state` berikutnya dan tidak mengirim total harga. Contoh
+lengkap tersedia pada kontrak OpenAPI agar tidak diduplikasi.
 
 ## 6. Data model
 
 ### Relational entities
 
-```mermaid
-erDiagram
-    CONVERSATION ||--o| RESERVATION_DRAFT : owns
-    RESERVATION_DRAFT ||--o| RESERVATION : becomes
-    RESERVATION ||--|| TICKET : creates
-    RESERVATION ||--o| ATTACHMENT : contains
-    SERVICE ||--o{ SPECIALIZATION : offers
-
-    CONVERSATION {
-        string id PK
-        string state
-        json context
-        datetime created_at
-        datetime updated_at
-        datetime expires_at
-    }
-    RESERVATION_DRAFT {
-        string id PK
-        string conversation_id FK
-        string service_type
-        json slots
-        datetime updated_at
-    }
-    RESERVATION {
-        string id PK
-        string service_type
-        string customer_id
-        string phone_number_encrypted
-        json details
-        decimal estimated_price
-        datetime created_at
-    }
-    TICKET {
-        string id PK
-        string reservation_id FK
-        string ticket_number UK
-        string status
-        datetime created_at
-    }
-    ATTACHMENT {
-        string id PK
-        string reservation_id FK
-        string stored_name
-        string content_type
-        int size_bytes
-    }
-```
+ERD telah dipindahkan ke [Entity Relationship Diagram](diagram/erd.md) sebagai
+sumber tunggal untuk entity, kardinalitas, data dictionary, constraint, index,
+serta boundary antara MySQL, JSONL, model artifact, dan file storage.
 
 Untuk menjaga scope, detail unik Borongan/Harian disimpan pada JSON tervalidasi
 Pydantic. Jika sistem berkembang, detail dapat dinormalisasi menjadi table
 terpisah.
+
+### Pricing boundary
+
+Backend `pricing` menggunakan fixed rate `pricing-v1`: matriks
+specialization/session untuk Harian dan harga dasar building type untuk
+Borongan, dengan biaya admin serta survei yang tetap. Nilai dan rumus lengkap
+berada pada [MVP plan](01-mvp-plan.md#34-harga-demo-tetap). Frontend hanya
+merender breakdown dari API.
 
 ### Ticket status MVP
 
@@ -284,6 +224,9 @@ MENUNGGU_KONFIRMASI --(pengguna setuju)--> MENUNGGU_PEMBAYARAN
 
 Status pembayaran selanjutnya hanya placeholder dan tidak berubah otomatis
 karena payment gateway berada di luar scope.
+
+Nomor tiket canonical mengikuti regex `^TKT-[0-9]{8}-[A-Z0-9]{6}$`, misalnya
+`TKT-20260728-AB12CD`.
 
 ## 7. Conversation persistence dan logging
 
@@ -335,7 +278,7 @@ mengandung data pribadi dan label yang belum diverifikasi.
 Development normal dapat tetap menjalankan:
 
 ```text
-bun --cwd apps/frontend dev
+bun run --cwd apps/frontend dev
 uv run --project apps/backend uvicorn app.main:app --reload
 docker compose up mysql
 ```
@@ -363,4 +306,5 @@ versinya.
 - ADR-002: TF-IDF + Logistic Regression untuk intent classifier.
 - ADR-003: Deterministic state machine untuk transaksi reservasi.
 - ADR-004: MySQL untuk transaksi dan JSONL untuk evidence log.
-- ADR-005: Harga dan availability sebagai configuration MVP.
+- ADR-005: Fixed demo pricing yang versioned dan availability sebagai
+  configuration MVP.

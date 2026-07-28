@@ -28,18 +28,18 @@ boleh dikurangi.
 
 ### M0 — Project foundation
 
-- [ ] `FND-01` Buat struktur `apps/backend`, `apps/frontend`, `data`,
+- [x] `FND-01` Buat struktur `apps/backend`, `apps/frontend`, `data`,
   `artifacts`, `storage`, dan `docs`.
-- [ ] `FND-02` Bootstrap FastAPI Python 3.12 dengan `uv`.
-- [ ] `FND-03` Konfigurasi Ruff, mypy, pytest, environment settings, dan
+- [x] `FND-02` Bootstrap FastAPI Python 3.12 dengan `uv`.
+- [x] `FND-03` Konfigurasi Ruff, mypy, pytest, environment settings, dan
   structured error.
-- [ ] `FND-04` Bootstrap Next.js 16 App Router menggunakan Bun dan TypeScript
+- [x] `FND-04` Bootstrap Next.js 16 App Router menggunakan Bun dan TypeScript
   strict.
-- [ ] `FND-05` Tambahkan Tailwind CSS serta inisialisasi shadcn/ui.
-- [ ] `FND-06` Konfigurasi ESLint, Prettier, Husky, dan lint-staged.
-- [ ] `FND-07` Tambahkan MySQL `compose.yaml`, SQLAlchemy, dan Alembic.
-- [ ] `FND-08` Buat `.env.example`, `.gitignore`, health/ready endpoint.
-- [ ] `FND-09` Tambahkan root developer commands dan CI quality checks.
+- [x] `FND-05` Tambahkan Tailwind CSS serta inisialisasi shadcn/ui.
+- [x] `FND-06` Konfigurasi ESLint, Prettier, Husky, dan lint-staged.
+- [x] `FND-07` Tambahkan MySQL `compose.yaml`, SQLAlchemy, dan Alembic.
+- [x] `FND-08` Buat `.env.example`, `.gitignore`, health/ready endpoint.
+- [x] `FND-09` Tambahkan root developer commands dan CI quality checks.
 
 Definition of Done:
 
@@ -77,8 +77,9 @@ Definition of Done:
 - [ ] `CONV-02` Implement session create/get dan prompt pembuka dua pilihan.
 - [ ] `CONV-03` Implement FAQ router berbasis model intent dan confidence.
 - [ ] `CONV-04` Implement global commands: batal, menu, bantuan, mulai ulang.
-- [ ] `CONV-05` Implement extractor phone, customer ID, nominal budget, worker
-  count, date, session, building type, dan ticket number.
+- [ ] `CONV-05` Implement extractor phone, customer ID tepat 10 digit, nominal
+  budget, worker count, date, session, building type, dan ticket number
+  `TKT-YYYYMMDD-XXXXXX`.
 - [ ] `CONV-06` Implement slot priority dan validation feedback.
 - [ ] `CONV-07` Implement JSONL logger dengan masking PII.
 - [ ] `CONV-08` Persist dan restore conversation state/draft.
@@ -94,12 +95,15 @@ Definition of Done:
 ### M3 — Catalog, reservation, pricing, ticketing
 
 - [ ] `CAT-01` Definisikan seed service, specialization, work session, dan
-  survey availability.
+  survey availability. Seed spesialisasi Tukang Harian wajib mencakup `cat`,
+  `genteng`, `ac`, `listrik`, `keramik`, dan `pipa`.
 - [ ] `RES-01` Implement schema/rule Jasa Borongan.
 - [ ] `RES-02` Implement schema/rule Tukang Harian.
-- [ ] `PRICE-01` Implement configurable daily price calculator dan breakdown.
+- [ ] `PRICE-01` Implement calculator berdasarkan fixed rate `pricing-v1`
+  untuk Harian dan Borongan beserta breakdown.
 - [ ] `RES-03` Implement summary, confirm, edit slot, dan cancel.
-- [ ] `TKT-01` Implement unique ticket number dan status.
+- [ ] `TKT-01` Implement unique ticket number berformat
+  `TKT-YYYYMMDD-XXXXXX` dan status.
 - [ ] `TKT-02` Implement ticket lookup.
 - [ ] `UPL-01` Implement safe optional photo upload.
 - [ ] `RES-04` Transactionally create reservation + ticket only after
@@ -110,8 +114,8 @@ Definition of Done:
 Definition of Done:
 
 - Kedua jenis reservasi selesai sampai tiket.
-- Harian menampilkan kalkulasi dari backend; Borongan membedakan budget dari
-  harga final.
+- Harian dan Borongan menampilkan kalkulasi fixed dari backend; Borongan
+  membedakan budget pengguna dari estimasi harga demo.
 - Menolak konfirmasi atau membatalkan tidak membuat tiket.
 - Tiket bisa dilihat kembali dan email ditandai sebagai simulasi.
 
@@ -194,7 +198,7 @@ namun integrasi conversation menunggu model loader dan state definition.
 | Dataset sintetis terlalu mudah | Metrik tidak realistis | Tambahkan variasi, typo, hard negatives, near-duplicate check |
 | Intent overlap | Salah routing FAQ | Labeling guide, error analysis, fallback threshold, quick replies |
 | Scope dialog membesar | MVP terlambat | Batasi command dan gunakan finite states eksplisit |
-| Harga dianggap harga final | Ekspektasi pengguna salah | Label estimasi dan simpan aturan di config |
+| Harga demo dianggap harga pasar | Ekspektasi pengguna salah | Label `pricing-v1` sebagai fixed demo dan simpan seluruh aturan di backend |
 | Data pribadi bocor ke log/git | Risiko privacy | Masking, `.gitignore`, dummy evidence |
 | Upload tidak aman | Risiko file abuse | Allow-list, limit, generated filename, no execution |
 | Next.js 16/package API berubah | Setup/build gagal | Pin dependency dan dokumentasikan versi lockfile |

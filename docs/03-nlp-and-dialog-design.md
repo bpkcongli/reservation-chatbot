@@ -149,17 +149,23 @@ Extractor membaca raw text dan state aktif. Contoh:
 | Slot | Teknik | Contoh |
 |---|---|---|
 | `phone_number` | Regex + normalisasi `0`, `62`, `+62` | `0812 3456 7890` → `+6281234567890` |
-| `customer_id` | Pattern allow-list | `CUST-1024` |
+| `customer_id` | Regex exact `^[0-9]{10}$`; simpan sebagai string | `0123456789` |
 | `building_type` | Dictionary/synonym matching | `rumah saya` → `rumah` |
 | `budget` | Regex nominal + unit | `sekitar 20 juta` → `20000000` |
+| `specialization` | Dictionary/katalog allow-list | `spesialis AC` → `ac` |
 | `worker_count` | Regex angka/kata bilangan terbatas | `dua orang` → `2` |
 | `work_session` | Pattern/synonym | `setengah hari pagi` → `morning` |
 | dates | Parser format Indonesia + validation | `2 Agustus 2026` → ISO date |
-| ticket number | Regex case-insensitive | `TKT-20260728-AB12CD` |
+| ticket number | Regex `^TKT-[0-9]{8}-[A-Z0-9]{6}$`; input dinormalisasi uppercase | `TKT-20260728-AB12CD` |
 
 Alamat dan deskripsi bukan NER; keduanya diambil sebagai jawaban penuh pada
 state yang sesuai lalu divalidasi panjangnya. Foto masuk melalui endpoint
 attachment dan menghasilkan `attachment_id`.
+
+Nilai canonical yang valid untuk slot `specialization` adalah `cat`, `genteng`,
+`ac`, `listrik`, `keramik`, dan `pipa`. UI menampilkannya sebagai Spesialis
+Cat, Spesialis Genteng, Spesialis AC, Spesialis Listrik, Spesialis Keramik, dan
+Spesialis Pipa.
 
 Jika satu utterance mengandung beberapa slot—misalnya “dua tukang dari tanggal
 2 sampai 3 Agustus”—semua slot valid boleh disimpan sekaligus. Dialog manager
@@ -233,19 +239,50 @@ yang diharapkan, dan memberi contoh. Perintah global `batal`, `mulai ulang`,
 
 ## 7. Pricing design
 
-Nilai tarif belum diberikan dan harus berada pada config/katalog seed.
+Pricing memakai konfigurasi immutable bernama `pricing-v1`. Seluruh nominal
+dinyatakan dalam rupiah dan ditentukan backend:
+
+```text
+daily_rate = {
+  cat:      {full_day: 250000, morning: 150000, afternoon: 150000},
+  genteng:  {full_day: 350000, morning: 210000, afternoon: 210000},
+  ac:       {full_day: 300000, morning: 180000, afternoon: 180000},
+  listrik:  {full_day: 325000, morning: 195000, afternoon: 195000},
+  keramik:  {full_day: 300000, morning: 180000, afternoon: 180000},
+  pipa:     {full_day: 325000, morning: 195000, afternoon: 195000}
+}
+
+borongan_base = {
+  rumah: 5000000,
+  apartemen: 4000000,
+  ruko: 7500000
+}
+
+admin_fee = 25000
+borongan_survey_fee = 100000
+```
 
 Rumus estimasi Tukang Harian:
 
 ```text
 jumlah_hari = inclusive_day_count(start_date, end_date)
-subtotal = tariff[specialization][session] * worker_count * jumlah_hari
-estimated_price = subtotal + configurable_service_fee
+unit_rate = daily_rate[specialization][work_session]
+subtotal = unit_rate * worker_count * jumlah_hari
+estimated_price = subtotal + admin_fee
 ```
 
-Rumus dan breakdown ditampilkan kepada pengguna. Untuk Borongan, `budget`
-adalah perkiraan budget pelanggan; harga final menunggu survei sehingga tiket
-menampilkan `estimated_price: null` dan budget secara terpisah.
+Rumus estimasi Jasa Borongan:
+
+```text
+subtotal = borongan_base[building_type]
+estimated_price = subtotal + borongan_survey_fee + admin_fee
+```
+
+Breakdown selalu menyertakan `pricing_version`, unit/base price, subtotal,
+biaya admin, biaya survei bila berlaku, dan total. `budget` Borongan adalah
+preferensi pengguna yang ditampilkan terpisah dan tidak memengaruhi total.
+Nilai ini sengaja fixed untuk menjaga fokus project pada pengembangan chatbot,
+bukan sistem pricing komersial.
 
 ## 8. Evaluation plan
 
@@ -305,7 +342,8 @@ Penyebab yang mungkin:
   mengganggu konteks.
 - Data sintetis berpotensi membuat metrik lebih optimistis dari pemakaian nyata.
 - Tidak ada availability, payment, customer, email, atau WhatsApp real-time.
-- Estimasi harga bergantung pada asumsi konfigurasi.
+- Estimasi memakai harga demo fixed `pricing-v1`, bukan harga pasar atau
+  kebijakan komersial nyata.
 - Foto hanya disimpan, tidak dianalisis.
 
 ## 9. Conversation test scenarios

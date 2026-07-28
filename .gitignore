@@ -1,0 +1,38 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+
+# JavaScript / Next.js
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+
+# IDE / operating system
+.idea/
+.vscode/
+.DS_Store
+
+# Runtime data
+data/logs/*
+!data/logs/.gitkeep
+artifacts/models/*
+!artifacts/models/.gitkeep
+storage/uploads/*
+!storage/uploads/.gitkeep
+mysql_data/
+
+# Logs
+*.log

@@ -1,0 +1,1357 @@
+openapi: 3.1.0
+
+info:
+  title: Reservation Chatbot API
+  version: 1.0.0
+  summary: Kontrak HTTP API untuk MVP Reservation Chatbot.
+  description: |
+    Kontrak normatif antara frontend Next.js dan backend FastAPI.
+
+    Seluruh endpoint aplikasi menggunakan prefix `/api/v1`. Chat state,
+    validasi slot, katalog, kalkulasi harga, dan transisi reservasi ditentukan
+    oleh backend. Frontend tidak boleh mengirim state berikutnya atau total
+    harga hasil perhitungannya sendiri.
+
+    Autentikasi berada di luar scope MVP. Identifier conversation berfungsi
+    sebagai bearer-like reference yang harus disimpan dengan hati-hati oleh
+    frontend dan tidak boleh ditulis ke analytics pihak ketiga.
+
+    Seluruh response mengikuti envelope `status` dan `data` yang diadaptasi
+    dari kontrak Kotoba Hub. Field `traceId`, metadata pagination, auth, dan
+    empty response tidak dipakai karena belum dibutuhkan MVP ini. Success
+    selalu memiliki `status` dan object `data`; error hanya memiliki `status`.
+
+    `status.code` adalah integer 9 digit dengan bentuk
+    `[interface][HTTP status][domain][specific]`. Project ini hanya memakai
+    interface REST `1` dan shared domain `00`.
+
+servers:
+  - url: http://localhost:8000
+    description: Development lokal
+
+tags:
+  - name: System
+    description: Liveness dan dependency readiness.
+  - name: Conversations
+    description: Session chat, message, state, dan lampiran draft.
+  - name: Catalog
+    description: Jenis layanan, spesialisasi, sesi kerja, dan slot survei.
+  - name: Tickets
+    description: Lookup tiket reservasi yang telah dikonfirmasi.
+  - name: NLP
+    description: Metadata model intent untuk kebutuhan demo dan audit UAS.
+
+paths:
+  /api/v1/health:
+    get:
+      tags: [System]
+      operationId: getHealth
+      summary: Periksa liveness API
+      description: Tidak mengakses database atau model.
+      responses:
+        "200":
+          description: Process API hidup.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+              example:
+                status:
+                  code: 120000000
+                  message: Success.
+                  errorDetails: []
+                data:
+                  status: ok
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/ready:
+    get:
+      tags: [System]
+      operationId: getReadiness
+      summary: Periksa kesiapan dependency
+      description: |
+        Melakukan query ringan ke database. Check model ditambahkan setelah
+        artifact NLP tersedia pada M1.
+      responses:
+        "200":
+          description: Dependency runtime siap menerima traffic.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadinessResponse"
+              example:
+                status:
+                  code: 120000000
+                  message: Success.
+                  errorDetails: []
+                data:
+                  status: ready
+                  checks:
+                    database: ok
+                    model: ok
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/conversations:
+    post:
+      tags: [Conversations]
+      operationId: createConversation
+      summary: Buat conversation baru
+      description: |
+        Membuat session dan mengembalikan prompt pembuka dengan dua pilihan:
+        tanya layanan atau langsung reservasi.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateConversationRequest"
+            example:
+              locale: id-ID
+      responses:
+        "201":
+          description: Conversation berhasil dibuat.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConversationResponse"
+              example:
+                status:
+                  code: 120100000
+                  message: Created.
+                  errorDetails: []
+                data:
+                  conversation_id: 01K1A2B3C4D5E6F7G8H9J0K1M2
+                  state: WELCOME
+                  messages:
+                    - id: 01K1A2B3C4D5E6F7G8H9J0K1M3
+                      sender: bot
+                      text: Ada yang ingin saya bantu?
+                      created_at: "2026-07-29T09:00:00+07:00"
+                  quick_replies:
+                    - label: Tanya-tanya dulu layanan tukang
+                      value: info
+                    - label: Langsung reservasi
+                      value: reservation
+                  collected_slots: {}
+                  reservation_summary: null
+                  price_breakdown: null
+                  ticket: null
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/conversations/{conversation_id}:
+    parameters:
+      - $ref: "#/components/parameters/ConversationId"
+    get:
+      tags: [Conversations]
+      operationId: getConversation
+      summary: Pulihkan conversation
+      description: |
+        Mengembalikan seluruh message yang tersimpan, state aktif, slot draft,
+        ringkasan, dan tiket bila conversation sudah selesai.
+      responses:
+        "200":
+          description: Snapshot conversation terkini.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConversationResponse"
+        "404":
+          $ref: "#/components/responses/ConversationNotFound"
+        "410":
+          $ref: "#/components/responses/ConversationExpired"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/conversations/{conversation_id}/messages:
+    parameters:
+      - $ref: "#/components/parameters/ConversationId"
+    post:
+      tags: [Conversations]
+      operationId: sendConversationMessage
+      summary: Kirim message atau quick reply
+      description: |
+        `text` berisi teks bebas atau `value` dari quick reply. Backend
+        memproses global command, validasi slot, klasifikasi intent bila state
+        berada pada info mode, lalu mengembalikan state dan prompt berikutnya.
+
+        `client_message_id` menjadi idempotency key pada scope conversation.
+        Pengiriman ulang ID yang sama harus mengembalikan hasil turn sebelumnya
+        dan tidak membuat reservasi/tiket kedua.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendMessageRequest"
+            examples:
+              freeText:
+                summary: Teks bebas
+                value:
+                  client_message_id: web-018f4f39-ef82-7d91-b4c6-1ce99ecf8f11
+                  text: Saya butuh spesialis listrik
+              quickReply:
+                summary: Nilai quick reply
+                value:
+                  client_message_id: web-018f4f39-ef82-7d91-b4c6-1ce99ecf8f12
+                  text: listrik
+      responses:
+        "200":
+          description: |
+            Turn berhasil diproses. Pada response endpoint mutasi,
+            `data.messages` berisi message baru dari turn ini; gunakan GET
+            conversation untuk mengambil seluruh history.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConversationResponse"
+        "404":
+          $ref: "#/components/responses/ConversationNotFound"
+        "409":
+          $ref: "#/components/responses/ConversationConflict"
+        "410":
+          $ref: "#/components/responses/ConversationExpired"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/conversations/{conversation_id}/attachments:
+    parameters:
+      - $ref: "#/components/parameters/ConversationId"
+    post:
+      tags: [Conversations]
+      operationId: uploadConversationAttachment
+      summary: Upload foto masalah untuk draft aktif
+      description: |
+        Hanya tersedia pada draft Tukang Harian. MVP menerima maksimal satu
+        foto JPG, PNG, atau WebP. Server memvalidasi MIME, extension, magic
+        bytes, dan ukuran; nama file penyimpanan selalu dibuat oleh server.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Foto masalah, maksimal sesuai konfigurasi `MAX_UPLOAD_MB`.
+      responses:
+        "201":
+          description: Foto tervalidasi dan terhubung ke reservation draft.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AttachmentUploadResponse"
+        "404":
+          $ref: "#/components/responses/ConversationNotFound"
+        "409":
+          $ref: "#/components/responses/ConversationConflict"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
+        "415":
+          $ref: "#/components/responses/UnsupportedMediaType"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/catalog/services:
+    get:
+      tags: [Catalog]
+      operationId: listServices
+      summary: Ambil katalog layanan
+      description: |
+        Mengembalikan Jasa Borongan, Tukang Harian, enam spesialisasi Tukang
+        Harian, dan sesi kerja yang aktif.
+      responses:
+        "200":
+          description: Katalog aktif.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceCatalogResponse"
+              example:
+                status:
+                  code: 120000000
+                  message: Success.
+                  errorDetails: []
+                data:
+                  pricing_version: pricing-v1
+                  services:
+                    - value: borongan
+                      label: Jasa Borongan
+                      description: Permintaan pekerjaan berdasarkan survei dan budget.
+                      specializations: []
+                      work_sessions: []
+                    - value: harian
+                      label: Tukang Harian
+                      description: Tukang berdasarkan spesialisasi, durasi, dan sesi.
+                      specializations:
+                        - value: cat
+                          label: Spesialis Cat
+                        - value: genteng
+                          label: Spesialis Genteng
+                        - value: ac
+                          label: Spesialis AC
+                        - value: listrik
+                          label: Spesialis Listrik
+                        - value: keramik
+                          label: Spesialis Keramik
+                        - value: pipa
+                          label: Spesialis Pipa
+                      work_sessions:
+                        - value: full_day
+                          label: Sehari penuh
+                        - value: morning
+                          label: Pagi
+                        - value: afternoon
+                          label: Siang
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/catalog/survey-slots:
+    get:
+      tags: [Catalog]
+      operationId: listSurveySlots
+      summary: Ambil ketersediaan slot survei
+      parameters:
+        - name: date_from
+          in: query
+          required: true
+          description: Awal rentang pencarian; tidak boleh di masa lalu.
+          schema:
+            type: string
+            format: date
+        - name: date_to
+          in: query
+          required: true
+          description: Akhir rentang, maksimal 31 hari setelah `date_from`.
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Daftar slot survei pada rentang yang diminta.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SurveySlotResponse"
+              example:
+                status:
+                  code: 120000000
+                  message: Success.
+                  errorDetails: []
+                data:
+                  timezone: Asia/Jakarta
+                  slots:
+                    - date: "2026-08-03"
+                      time: "09:00"
+                      available: true
+                    - date: "2026-08-03"
+                      time: "13:00"
+                      available: true
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/tickets/{ticket_number}:
+    parameters:
+      - $ref: "#/components/parameters/TicketNumber"
+    get:
+      tags: [Tickets]
+      operationId: getTicket
+      summary: Lihat tiket reservasi
+      description: |
+        Mengembalikan ringkasan aman untuk pengguna. Nomor telepon lengkap,
+        alamat lengkap, stored filename, dan internal identifier tidak
+        dikembalikan.
+      responses:
+        "200":
+          description: Tiket ditemukan.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TicketResponse"
+        "404":
+          $ref: "#/components/responses/TicketNotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/nlp/model-info:
+    get:
+      tags: [NLP]
+      operationId: getModelInfo
+      summary: Ambil metadata model intent
+      description: |
+        Endpoint read-only untuk demo UAS. Tidak mengembalikan dataset mentah,
+        utterance pengguna, atau binary model.
+      responses:
+        "200":
+          description: Metadata artifact model yang sedang digunakan.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModelInfoResponse"
+              example:
+                status:
+                  code: 120000000
+                  message: Success.
+                  errorDetails: []
+                data:
+                  model_version: intent-v1
+                  algorithm: TfidfVectorizer + LogisticRegression
+                  trained_at: "2026-08-01T10:00:00+07:00"
+                  dataset_rows: 240
+                  dataset_checksum: sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+                  labels:
+                    - greeting
+                    - service_overview
+                    - borongan_info
+                    - harian_info
+                    - pricing_info
+                    - start_reservation
+                    - ticket_status
+                    - closing
+                  confidence_threshold: 0.55
+        "503":
+          $ref: "#/components/responses/ModelUnavailable"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+components:
+  parameters:
+    ConversationId:
+      name: conversation_id
+      in: path
+      required: true
+      description: ULID conversation.
+      schema:
+        type: string
+        minLength: 26
+        maxLength: 26
+        pattern: "^[0-9A-HJKMNP-TV-Z]{26}$"
+      example: 01K1A2B3C4D5E6F7G8H9J0K1M2
+
+    TicketNumber:
+      name: ticket_number
+      in: path
+      required: true
+      description: Nomor tiket yang diterima setelah konfirmasi.
+      schema:
+        type: string
+        pattern: "^TKT-[0-9]{8}-[A-Z0-9]{6}$"
+      example: TKT-20260729-AB12CD
+
+  responses:
+    ConversationNotFound:
+      description: Conversation ID tidak ditemukan.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            status:
+              code: 140400001
+              message: Percakapan tidak ditemukan.
+              errorDetails: []
+
+    ConversationExpired:
+      description: Conversation sudah melewati masa retensi.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            status:
+              code: 141000001
+              message: Percakapan sudah kedaluwarsa. Silakan mulai percakapan baru.
+              errorDetails: []
+
+    ConversationConflict:
+      description: Operasi tidak sesuai dengan state conversation saat ini.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            status:
+              code: 140900001
+              message: Operasi tidak tersedia pada langkah percakapan saat ini.
+              errorDetails: []
+
+    TicketNotFound:
+      description: Nomor tiket tidak ditemukan.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            status:
+              code: 140400002
+              message: Tiket tidak ditemukan.
+              errorDetails: []
+
+    ValidationError:
+      description: Request atau nilai slot tidak valid.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            invalidRequest:
+              value:
+                status:
+                  code: 142200001
+                  message: Data permintaan tidak valid.
+                  errorDetails:
+                    - field: text
+                      message: Teks wajib diisi.
+            invalidSlot:
+              value:
+                status:
+                  code: 142200002
+                  message: Nilai slot tidak valid.
+                  errorDetails:
+                    - field: end_date
+                      message: Tanggal selesai tidak boleh sebelum tanggal mulai.
+            invalidCustomerId:
+              value:
+                status:
+                  code: 142200002
+                  message: Nilai slot tidak valid.
+                  errorDetails:
+                    - field: customer_id
+                      message: ID pelanggan harus tepat 10 digit angka.
+
+    PayloadTooLarge:
+      description: Ukuran upload melebihi batas konfigurasi.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            status:
+              code: 141300001
+              message: Ukuran foto melebihi batas yang diizinkan.
+              errorDetails:
+                - field: file
+                  message: Pilih foto dengan ukuran di bawah batas upload.
+
+    UnsupportedMediaType:
+      description: Format atau isi file tidak termasuk allow-list.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            status:
+              code: 141500001
+              message: Format foto tidak didukung.
+              errorDetails:
+                - field: file
+                  message: Gunakan foto berformat JPG, PNG, atau WebP.
+
+    TooManyRequests:
+      description: Rate limit IP atau conversation terlampaui.
+      headers:
+        Retry-After:
+          description: Jumlah detik sebelum request dapat dicoba kembali.
+          schema:
+            type: integer
+            minimum: 1
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            status:
+              code: 142900001
+              message: Terlalu banyak permintaan. Silakan coba beberapa saat lagi.
+              errorDetails: []
+
+    ServiceUnavailable:
+      description: Database atau dependency runtime belum siap.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            status:
+              code: 150300001
+              message: Layanan belum siap.
+              errorDetails: []
+
+    ModelUnavailable:
+      description: Artifact model belum tersedia atau gagal dimuat.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            status:
+              code: 150300002
+              message: Model intent belum siap.
+              errorDetails: []
+
+    InternalServerError:
+      description: Kesalahan internal yang tidak terduga.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            status:
+              code: 150000999
+              message: Terjadi kesalahan internal. Silakan coba lagi.
+              errorDetails: []
+
+  schemas:
+    ErrorDetail:
+      type: object
+      additionalProperties: false
+      required: [field, message]
+      properties:
+        field:
+          type: string
+          minLength: 1
+        message:
+          type: string
+          minLength: 1
+
+    SuccessStatus:
+      type: object
+      additionalProperties: false
+      required: [code, message, errorDetails]
+      properties:
+        code:
+          type: integer
+          enum: [120000000, 120100000]
+          description: |
+            `120000000` untuk HTTP 200 dan `120100000` untuk HTTP 201.
+        message:
+          type: string
+          minLength: 1
+        errorDetails:
+          type: array
+          maxItems: 0
+          items:
+            $ref: "#/components/schemas/ErrorDetail"
+
+    ErrorStatus:
+      type: object
+      additionalProperties: false
+      required: [code, message, errorDetails]
+      properties:
+        code:
+          type: integer
+          enum:
+            - 140400001
+            - 140400002
+            - 140900001
+            - 141000001
+            - 141300001
+            - 141500001
+            - 142200001
+            - 142200002
+            - 142900001
+            - 150000999
+            - 150300001
+            - 150300002
+        message:
+          type: string
+          minLength: 1
+        errorDetails:
+          type: array
+          items:
+            $ref: "#/components/schemas/ErrorDetail"
+
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status:
+          $ref: "#/components/schemas/ErrorStatus"
+
+    HealthResponse:
+      type: object
+      additionalProperties: false
+      required: [status, data]
+      properties:
+        status:
+          $ref: "#/components/schemas/SuccessStatus"
+        data:
+          $ref: "#/components/schemas/HealthData"
+
+    HealthData:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status:
+          type: string
+          const: ok
+
+    ReadinessResponse:
+      type: object
+      additionalProperties: false
+      required: [status, data]
+      properties:
+        status:
+          $ref: "#/components/schemas/SuccessStatus"
+        data:
+          $ref: "#/components/schemas/ReadinessData"
+
+    ReadinessData:
+      type: object
+      additionalProperties: false
+      required: [status, checks]
+      properties:
+        status:
+          type: string
+          const: ready
+        checks:
+          type: object
+          additionalProperties: false
+          required: [database]
+          properties:
+            database:
+              type: string
+              const: ok
+            model:
+              type: string
+              const: ok
+              description: Tersedia setelah milestone NLP baseline.
+
+    CreateConversationRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        locale:
+          type: string
+          const: id-ID
+          default: id-ID
+
+    SendMessageRequest:
+      type: object
+      additionalProperties: false
+      required: [client_message_id, text]
+      properties:
+        client_message_id:
+          type: string
+          minLength: 8
+          maxLength: 100
+          pattern: "^[A-Za-z0-9_-]+$"
+          description: ID stabil yang dibuat frontend untuk idempotency.
+        text:
+          type: string
+          minLength: 1
+          maxLength: 1000
+          description: Teks pengguna atau value quick reply.
+
+    ConversationResponse:
+      type: object
+      additionalProperties: false
+      required: [status, data]
+      properties:
+        status:
+          $ref: "#/components/schemas/SuccessStatus"
+        data:
+          $ref: "#/components/schemas/ConversationData"
+
+    ConversationData:
+      type: object
+      additionalProperties: false
+      required:
+        - conversation_id
+        - state
+        - messages
+        - quick_replies
+        - collected_slots
+        - reservation_summary
+        - price_breakdown
+        - ticket
+      properties:
+        conversation_id:
+          type: string
+          minLength: 26
+          maxLength: 26
+        state:
+          $ref: "#/components/schemas/ConversationState"
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChatMessage"
+        quick_replies:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuickReply"
+        collected_slots:
+          type: object
+          description: |
+            Snapshot slot draft yang aman ditampilkan. Nomor telepon harus
+            masked. Key mengikuti slot pada MVP plan.
+          additionalProperties: true
+        reservation_summary:
+          oneOf:
+            - $ref: "#/components/schemas/BoronganReservationSummary"
+            - $ref: "#/components/schemas/HarianReservationSummary"
+            - type: "null"
+        price_breakdown:
+          oneOf:
+            - $ref: "#/components/schemas/PriceBreakdown"
+            - type: "null"
+        ticket:
+          oneOf:
+            - $ref: "#/components/schemas/Ticket"
+            - type: "null"
+
+    ConversationState:
+      type: string
+      enum:
+        - WELCOME
+        - INFO_MODE
+        - FALLBACK
+        - SELECT_SERVICE
+        - BORONGAN_ASK_CUSTOMER_ID
+        - BORONGAN_ASK_PHONE
+        - BORONGAN_ASK_BUILDING
+        - BORONGAN_ASK_ADDRESS
+        - BORONGAN_ASK_SURVEY_DATE
+        - BORONGAN_ASK_SURVEY_TIME
+        - BORONGAN_ASK_BUDGET
+        - HARIAN_ASK_CUSTOMER_ID
+        - HARIAN_ASK_PHONE
+        - HARIAN_ASK_SPECIALIZATION
+        - HARIAN_ASK_DESCRIPTION
+        - HARIAN_ASK_WORKER_COUNT
+        - HARIAN_ASK_START_DATE
+        - HARIAN_ASK_END_DATE
+        - HARIAN_ASK_SESSION
+        - HARIAN_ASK_PHOTO
+        - HARIAN_ASK_ADDRESS
+        - CALCULATE_PRICE
+        - CONFIRM_RESERVATION
+        - EDIT_SLOT
+        - TICKET_LOOKUP
+        - TICKET_CREATED
+        - CANCELLED
+
+    ChatMessage:
+      type: object
+      additionalProperties: false
+      required: [id, sender, text, created_at]
+      properties:
+        id:
+          type: string
+          minLength: 26
+          maxLength: 26
+        sender:
+          type: string
+          enum: [user, bot]
+        text:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        created_at:
+          type: string
+          format: date-time
+
+    QuickReply:
+      type: object
+      additionalProperties: false
+      required: [label, value]
+      properties:
+        label:
+          type: string
+          minLength: 1
+          maxLength: 80
+        value:
+          type: string
+          minLength: 1
+          maxLength: 80
+
+    ServiceType:
+      type: string
+      enum: [borongan, harian]
+
+    Specialization:
+      type: string
+      enum: [cat, genteng, ac, listrik, keramik, pipa]
+
+    WorkSession:
+      type: string
+      enum: [full_day, morning, afternoon]
+
+    BuildingType:
+      type: string
+      enum: [rumah, apartemen, ruko]
+
+    CustomerId:
+      type: string
+      minLength: 10
+      maxLength: 10
+      pattern: "^[0-9]{10}$"
+      description: Tepat 10 digit dan selalu diperlakukan sebagai string.
+      example: "0123456789"
+
+    BoronganReservationSummary:
+      type: object
+      additionalProperties: false
+      required:
+        - service_type
+        - customer_id
+        - phone_number_masked
+        - building_type
+        - survey_address
+        - survey_date
+        - survey_time
+        - budget
+      properties:
+        service_type:
+          type: string
+          const: borongan
+        customer_id:
+          $ref: "#/components/schemas/CustomerId"
+        phone_number_masked:
+          type: string
+          example: "+62812****7890"
+        building_type:
+          $ref: "#/components/schemas/BuildingType"
+        survey_address:
+          type: string
+        survey_date:
+          type: string
+          format: date
+        survey_time:
+          type: string
+          pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+        budget:
+          type: integer
+          minimum: 1
+          description: Preferensi pengguna; tidak memengaruhi total fixed.
+
+    HarianReservationSummary:
+      type: object
+      additionalProperties: false
+      required:
+        - service_type
+        - customer_id
+        - phone_number_masked
+        - specialization
+        - problem_description
+        - worker_count
+        - start_date
+        - end_date
+        - work_session
+        - work_address
+        - attachment
+      properties:
+        service_type:
+          type: string
+          const: harian
+        customer_id:
+          $ref: "#/components/schemas/CustomerId"
+        phone_number_masked:
+          type: string
+          example: "+62812****7890"
+        specialization:
+          $ref: "#/components/schemas/Specialization"
+        problem_description:
+          type: string
+        worker_count:
+          type: integer
+          minimum: 1
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        work_session:
+          $ref: "#/components/schemas/WorkSession"
+        work_address:
+          type: string
+        attachment:
+          oneOf:
+            - $ref: "#/components/schemas/Attachment"
+            - type: "null"
+
+    PriceBreakdown:
+      oneOf:
+        - $ref: "#/components/schemas/HarianPriceBreakdown"
+        - $ref: "#/components/schemas/BoronganPriceBreakdown"
+
+    HarianPriceBreakdown:
+      type: object
+      description: |
+        Fixed unit rate `pricing-v1` per specialization untuk
+        full_day/morning/afternoon:
+        cat 250000/150000/150000; genteng 350000/210000/210000;
+        ac 300000/180000/180000; listrik 325000/195000/195000;
+        keramik 300000/180000/180000; pipa 325000/195000/195000.
+      additionalProperties: false
+      required:
+        - service_type
+        - pricing_version
+        - currency
+        - specialization
+        - work_session
+        - unit_rate
+        - worker_count
+        - day_count
+        - subtotal
+        - admin_fee
+        - estimated_price
+        - disclaimer
+      properties:
+        service_type:
+          type: string
+          const: harian
+        pricing_version:
+          type: string
+          const: pricing-v1
+        currency:
+          type: string
+          const: IDR
+        specialization:
+          $ref: "#/components/schemas/Specialization"
+        work_session:
+          $ref: "#/components/schemas/WorkSession"
+        unit_rate:
+          type: integer
+          minimum: 1
+          description: Fixed lookup `daily_rate[specialization][work_session]`.
+        worker_count:
+          type: integer
+          minimum: 1
+        day_count:
+          type: integer
+          minimum: 1
+        subtotal:
+          type: integer
+          minimum: 0
+        admin_fee:
+          type: integer
+          const: 25000
+        estimated_price:
+          type: integer
+          minimum: 0
+        disclaimer:
+          type: string
+          example: Harga fixed pricing-v1 hanya untuk demonstrasi chatbot.
+
+    BoronganPriceBreakdown:
+      type: object
+      description: |
+        Fixed base price `pricing-v1`: rumah 5000000, apartemen 4000000,
+        dan ruko 7500000. Budget tidak menjadi input kalkulasi.
+      additionalProperties: false
+      required:
+        - service_type
+        - pricing_version
+        - currency
+        - building_type
+        - base_price
+        - survey_fee
+        - admin_fee
+        - subtotal
+        - budget
+        - estimated_price
+        - disclaimer
+      properties:
+        service_type:
+          type: string
+          const: borongan
+        pricing_version:
+          type: string
+          const: pricing-v1
+        currency:
+          type: string
+          const: IDR
+        building_type:
+          $ref: "#/components/schemas/BuildingType"
+        base_price:
+          type: integer
+          minimum: 1
+          description: Fixed lookup `borongan_base[building_type]`.
+        survey_fee:
+          type: integer
+          const: 100000
+        admin_fee:
+          type: integer
+          const: 25000
+        subtotal:
+          type: integer
+          minimum: 1
+          description: Sama dengan base price sebelum fee.
+        budget:
+          type: integer
+          minimum: 1
+          description: Preferensi pengguna dan bukan input kalkulasi.
+        estimated_price:
+          type: integer
+          minimum: 1
+        disclaimer:
+          type: string
+          example: Harga fixed pricing-v1 hanya untuk demonstrasi chatbot.
+
+    TicketResponse:
+      type: object
+      additionalProperties: false
+      required: [status, data]
+      properties:
+        status:
+          $ref: "#/components/schemas/SuccessStatus"
+        data:
+          $ref: "#/components/schemas/Ticket"
+
+    Ticket:
+      type: object
+      additionalProperties: false
+      required:
+        - ticket_number
+        - service_type
+        - status
+        - pricing_version
+        - estimated_price
+        - budget
+        - created_at
+        - email_delivery
+      properties:
+        ticket_number:
+          type: string
+          pattern: "^TKT-[0-9]{8}-[A-Z0-9]{6}$"
+          description: Literal TKT, tanggal YYYYMMDD, dan 6 huruf kapital/angka.
+          example: TKT-20260728-AB12CD
+        service_type:
+          $ref: "#/components/schemas/ServiceType"
+        status:
+          type: string
+          const: MENUNGGU_PEMBAYARAN
+        pricing_version:
+          type: string
+          const: pricing-v1
+        estimated_price:
+          type: integer
+          minimum: 1
+          description: Total fixed demo untuk Harian atau Borongan.
+        budget:
+          type: [integer, "null"]
+          minimum: 1
+          description: Hanya terisi untuk Borongan.
+        created_at:
+          type: string
+          format: date-time
+        email_delivery:
+          type: string
+          const: NOT_IMPLEMENTED
+
+    Attachment:
+      type: object
+      additionalProperties: false
+      required: [attachment_id, content_type, size_bytes, status]
+      properties:
+        attachment_id:
+          type: string
+          minLength: 26
+          maxLength: 26
+        content_type:
+          type: string
+          enum: [image/jpeg, image/png, image/webp]
+        size_bytes:
+          type: integer
+          minimum: 1
+        status:
+          type: string
+          const: ready
+
+    AttachmentUploadResponse:
+      type: object
+      additionalProperties: false
+      required: [status, data]
+      properties:
+        status:
+          $ref: "#/components/schemas/SuccessStatus"
+        data:
+          $ref: "#/components/schemas/AttachmentUploadData"
+
+    AttachmentUploadData:
+      type: object
+      additionalProperties: false
+      required: [conversation_id, attachment]
+      properties:
+        conversation_id:
+          type: string
+          minLength: 26
+          maxLength: 26
+        attachment:
+          $ref: "#/components/schemas/Attachment"
+
+    ServiceCatalogResponse:
+      type: object
+      additionalProperties: false
+      required: [status, data]
+      properties:
+        status:
+          $ref: "#/components/schemas/SuccessStatus"
+        data:
+          $ref: "#/components/schemas/ServiceCatalogData"
+
+    ServiceCatalogData:
+      type: object
+      additionalProperties: false
+      required: [pricing_version, services]
+      properties:
+        pricing_version:
+          type: string
+          const: pricing-v1
+        services:
+          type: array
+          minItems: 2
+          items:
+            $ref: "#/components/schemas/ServiceCatalogItem"
+
+    ServiceCatalogItem:
+      type: object
+      additionalProperties: false
+      required: [value, label, description, specializations, work_sessions]
+      properties:
+        value:
+          $ref: "#/components/schemas/ServiceType"
+        label:
+          type: string
+        description:
+          type: string
+        specializations:
+          type: array
+          items:
+            $ref: "#/components/schemas/CatalogOption"
+        work_sessions:
+          type: array
+          items:
+            $ref: "#/components/schemas/CatalogOption"
+
+    CatalogOption:
+      type: object
+      additionalProperties: false
+      required: [value, label]
+      properties:
+        value:
+          type: string
+        label:
+          type: string
+
+    SurveySlotResponse:
+      type: object
+      additionalProperties: false
+      required: [status, data]
+      properties:
+        status:
+          $ref: "#/components/schemas/SuccessStatus"
+        data:
+          $ref: "#/components/schemas/SurveySlotData"
+
+    SurveySlotData:
+      type: object
+      additionalProperties: false
+      required: [timezone, slots]
+      properties:
+        timezone:
+          type: string
+          const: Asia/Jakarta
+        slots:
+          type: array
+          items:
+            $ref: "#/components/schemas/SurveySlot"
+
+    SurveySlot:
+      type: object
+      additionalProperties: false
+      required: [date, time, available]
+      properties:
+        date:
+          type: string
+          format: date
+        time:
+          type: string
+          pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+        available:
+          type: boolean
+
+    ModelInfoResponse:
+      type: object
+      additionalProperties: false
+      required: [status, data]
+      properties:
+        status:
+          $ref: "#/components/schemas/SuccessStatus"
+        data:
+          $ref: "#/components/schemas/ModelInfo"
+
+    ModelInfo:
+      type: object
+      additionalProperties: false
+      required:
+        - model_version
+        - algorithm
+        - trained_at
+        - dataset_rows
+        - dataset_checksum
+        - labels
+        - confidence_threshold
+      properties:
+        model_version:
+          type: string
+        algorithm:
+          type: string
+        trained_at:
+          type: string
+          format: date-time
+        dataset_rows:
+          type: integer
+          minimum: 1
+        dataset_checksum:
+          type: string
+          pattern: "^sha256:[a-fA-F0-9]+$"
+        labels:
+          type: array
+          minItems: 1
+          items:
+            type: string
+        confidence_threshold:
+          type: number
+          minimum: 0
+          maximum: 1
