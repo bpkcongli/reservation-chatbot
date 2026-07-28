@@ -1,8 +1,9 @@
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from pydantic import AnyHttpUrl
+from pydantic import AnyHttpUrl, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
@@ -27,6 +28,22 @@ class Settings(BaseSettings):
         "mysql+pymysql://reservation_app:reservation_app@127.0.0.1:3306/reservation_chatbot"
     )
     model_path: Path = REPOSITORY_ROOT / "artifacts" / "models" / "intent-classifier.joblib"
+    conversation_log_dir: Path = REPOSITORY_ROOT / "data" / "logs"
+    app_timezone: str = "Asia/Jakarta"
+
+    @field_validator("conversation_log_dir")
+    @classmethod
+    def resolve_conversation_log_dir(cls, value: Path) -> Path:
+        return value if value.is_absolute() else REPOSITORY_ROOT / value
+
+    @field_validator("app_timezone")
+    @classmethod
+    def validate_app_timezone(cls, value: str) -> str:
+        try:
+            ZoneInfo(value)
+        except ZoneInfoNotFoundError as error:
+            raise ValueError("APP_TIMEZONE must be a valid IANA timezone.") from error
+        return value
 
 
 @lru_cache

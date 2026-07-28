@@ -3,9 +3,11 @@ from collections.abc import Iterator
 import pytest
 from app.main import app
 from app.modules.conversation.api import (
+    get_conversation_logger,
     get_conversation_repository,
     get_intent_predictor,
 )
+from app.modules.conversation.logger import NullConversationTurnLogger
 from app.modules.conversation.repository import InMemoryConversationRepository
 from app.modules.nlp.model import IntentPrediction
 from app.modules.nlp.taxonomy import Intent
@@ -39,8 +41,12 @@ def conversation_dependencies() -> Iterator[InMemoryConversationRepository]:
     async def override_predictor() -> StubPredictor:
         return predictor
 
+    async def override_logger() -> NullConversationTurnLogger:
+        return NullConversationTurnLogger()
+
     app.dependency_overrides[get_conversation_repository] = override_repository
     app.dependency_overrides[get_intent_predictor] = override_predictor
+    app.dependency_overrides[get_conversation_logger] = override_logger
     yield repository
     app.dependency_overrides.clear()
 
@@ -218,3 +224,28 @@ async def test_invalid_reservation_slot_returns_feedback_and_preserves_state() -
     assert "0123456789" in response.json()["error"]["message"]
     assert restored.json()["data"]["state"] == "BORONGAN_ASK_CUSTOMER_ID"
     assert restored.json()["data"]["collected_slots"] == {"service_type": "borongan"}
+
+
+@pytest.mark.asyncio
+async def test_retried_client_message_id_returns_original_turn_without_duplicate_history() -> None:
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://test",
+    ) as client:
+        create_response = await client.post("/api/v1/conversations")
+        conversation_id = create_response.json()["data"]["conversation_id"]
+        payload = {"client_message_id": "web-message-301", "text": "reservation"}
+        first = await client.post(
+            f"/api/v1/conversations/{conversation_id}/messages",
+            json=payload,
+        )
+        retried = await client.post(
+            f"/api/v1/conversations/{conversation_id}/messages",
+            json=payload,
+        )
+        restored = await client.get(f"/api/v1/conversations/{conversation_id}")
+
+    assert first.status_code == 200
+    assert retried.status_code == 200
+    assert retried.json()["data"]["messages"] == first.json()["data"]["messages"]
+    assert len(restored.json()["data"]["messages"]) == 3

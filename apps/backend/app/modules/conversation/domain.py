@@ -54,6 +54,7 @@ class ChatMessage:
     sender: MessageSender
     text: str
     created_at: datetime
+    client_message_id: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

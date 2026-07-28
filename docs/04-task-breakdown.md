@@ -84,9 +84,9 @@ Definition of Done:
   `TKT-YYYYMMDD-XXXXXX`.
 - [x] `CONV-06` Implement slot priority dan validation feedback yang tidak
   menyalahkan pengguna serta menyertakan format benar dan langkah berikutnya.
-- [ ] `CONV-07` Implement JSONL logger dengan masking PII.
-- [ ] `CONV-08` Persist dan restore conversation state/draft.
-- [ ] `CONV-09` Tambahkan unit test state transition dan extractor.
+- [x] `CONV-07` Implement JSONL logger dengan masking PII.
+- [x] `CONV-08` Persist dan restore conversation state/draft.
+- [x] `CONV-09` Tambahkan unit test state transition dan extractor.
 
 Definition of Done:
 

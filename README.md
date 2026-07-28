@@ -9,7 +9,8 @@ mata kuliah Natural Language Processing.
 - Frontend: Next.js 16 App Router, React 19, TypeScript strict, Tailwind CSS,
   shadcn/ui, dan Bun.
 - Backend: Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2, Alembic, dan `uv`.
-- Database: MySQL 8.4 melalui Docker Compose.
+- Database: MySQL 8.x lokal/on-machine (direkomendasikan) atau MySQL 8.4
+  melalui Docker Compose.
 - Quality: Ruff, mypy, pytest, ESLint, Prettier, Vitest, Husky, lint-staged,
   dan GitHub Actions.
 
@@ -18,20 +19,31 @@ mata kuliah Natural Language Processing.
 - Python 3.12
 - [uv](https://docs.astral.sh/uv/)
 - Bun 1.3
-- Docker dengan Compose plugin
+- MySQL 8.x lokal atau Docker dengan Compose plugin
 
 ## Setup
 
 ```bash
 cp .env.example .env
 make install
+make migrate
+```
+
+Konfigurasi default memakai MySQL lokal pada `127.0.0.1:3306`. Buat database
+dan user development sesuai `.env`, atau sesuaikan `DATABASE_URL` dengan
+credential MySQL lokal Anda sebelum menjalankan migration.
+
+Sebagai alternatif, jalankan MySQL dari Compose:
+
+```bash
 make db-up
 make migrate
 ```
 
-Tunggu container MySQL berstatus sehat sebelum menjalankan migration. Nilai
-default dalam `.env.example` hanya untuk development lokal dan harus diganti
-pada environment lain.
+Backend yang berjalan di host tetap memakai `127.0.0.1` karena port container
+dipublikasikan. Jika backend juga dijalankan di dalam network Compose, ubah host
+di `DATABASE_URL` dari `127.0.0.1` menjadi `mysql`. Jangan jalankan MySQL lokal
+dan service Compose pada port host yang sama secara bersamaan.
 
 ## Menjalankan aplikasi
 
@@ -92,8 +104,9 @@ GET  /api/v1/conversations/{conversation_id}
 POST /api/v1/conversations/{conversation_id}/messages
 ```
 
-Session conversation masih disimpan dalam memory process. Persistensi dan
-restore lintas restart akan ditambahkan pada task `CONV-08`. FAQ free-text
+Session, message history, dan reservation draft disimpan di MySQL sehingga
+dapat dipulihkan setelah backend restart. Setiap user turn juga ditulis sebagai
+event ter-mask ke `data/logs/conversations-YYYY-MM-DD.jsonl`. FAQ free-text
 memakai model intent beserta confidence threshold; input ber-confidence rendah
 dikembalikan sebagai state `FALLBACK` dengan pilihan topik terarah.
 

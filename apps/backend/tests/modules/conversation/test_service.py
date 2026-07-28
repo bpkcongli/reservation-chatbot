@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 import pytest
 from app.modules.conversation.domain import ConversationState, MessageSender
 from app.modules.conversation.faq import FALLBACK_TEXT, WELCOME_TEXT
+from app.modules.conversation.logger import ConversationTurnEvent
 from app.modules.conversation.repository import InMemoryConversationRepository
 from app.modules.conversation.service import ConversationService
 from app.modules.nlp.model import IntentPrediction
@@ -23,6 +24,14 @@ class StubPredictor:
         return self.prediction
 
 
+class CapturingTurnLogger:
+    def __init__(self) -> None:
+        self.events: list[ConversationTurnEvent] = []
+
+    def append(self, event: ConversationTurnEvent) -> None:
+        self.events.append(event)
+
+
 def id_factory() -> Iterator[str]:
     for index in range(1, 50):
         yield f"01K1A2B3C4D5E6F7G8H9J{index:04d}"
@@ -31,12 +40,14 @@ def id_factory() -> Iterator[str]:
 def build_service(
     *,
     predictor: StubPredictor | None = None,
+    turn_logger: CapturingTurnLogger | None = None,
 ) -> tuple[ConversationService, InMemoryConversationRepository]:
     identifiers = id_factory()
     repository = InMemoryConversationRepository()
     service = ConversationService(
         repository,
         predictor=predictor,
+        turn_logger=turn_logger,
         clock=lambda: FIXED_NOW,
         id_factory=lambda _: next(identifiers),
     )
@@ -264,3 +275,40 @@ def test_harian_turn_can_fill_worker_dates_and_session_at_once() -> None:
     assert result.context.collected_slots["start_date"] == "2026-08-02"
     assert result.context.collected_slots["end_date"] == "2026-08-03"
     assert result.context.collected_slots["work_session"] == "morning"
+
+
+def test_every_processed_turn_emits_one_masked_log_event() -> None:
+    turn_logger = CapturingTurnLogger()
+    service, _ = build_service(turn_logger=turn_logger)
+    created = service.create_conversation()
+    conversation_id = created.context.conversation_id
+    service.process_message(conversation_id, "reservation")
+    service.process_message(conversation_id, "borongan")
+    service.process_message(conversation_id, "0123456789")
+    service.process_message(conversation_id, "nomor saya 0812 3456 7890")
+
+    assert len(turn_logger.events) == 4
+    event = turn_logger.events[-1]
+    assert event.turn == 4
+    assert event.state_before == "BORONGAN_ASK_PHONE"
+    assert event.state_after == "BORONGAN_ASK_BUILDING"
+    assert "0812 3456 7890" not in event.raw_text
+    assert event.extracted_slots == {"phone_number": "+62812****7890"}
+
+
+def test_invalid_slot_still_emits_event_without_overwriting_extracted_slots() -> None:
+    turn_logger = CapturingTurnLogger()
+    service, _ = build_service(turn_logger=turn_logger)
+    created = service.create_conversation()
+    conversation_id = created.context.conversation_id
+    service.process_message(conversation_id, "reservation")
+    service.process_message(conversation_id, "borongan")
+
+    with pytest.raises(ApplicationError):
+        service.process_message(conversation_id, "123")
+
+    event = turn_logger.events[-1]
+    assert event.state_before == "BORONGAN_ASK_CUSTOMER_ID"
+    assert event.state_after == "BORONGAN_ASK_CUSTOMER_ID"
+    assert event.extracted_slots == {}
+    assert "0123456789" not in event.response_text

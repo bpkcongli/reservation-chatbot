@@ -36,6 +36,13 @@ from app.modules.conversation.faq import (
     WELCOME_TEXT,
 )
 from app.modules.conversation.ids import generate_ulid
+from app.modules.conversation.logger import (
+    ConversationTurnEvent,
+    ConversationTurnLogger,
+    mask_extracted_slots,
+    mask_pii_text,
+    normalize_log_text,
+)
 from app.modules.conversation.repository import ConversationRepository
 from app.modules.nlp.model import IntentPrediction
 from app.modules.nlp.taxonomy import Intent
@@ -75,20 +82,32 @@ class ConversationService:
         repository: ConversationRepository,
         *,
         predictor: IntentPredictor | None = None,
+        turn_logger: ConversationTurnLogger | None = None,
+        timezone: ZoneInfo = JAKARTA_TIMEZONE,
         clock: Clock = utc_now,
         id_factory: IdFactory = generate_ulid,
     ) -> None:
         self._repository = repository
         self._predictor = predictor
+        self._turn_logger = turn_logger
+        self._timezone = timezone
         self._clock = clock
         self._id_factory = id_factory
 
-    def _message(self, sender: MessageSender, text: str, now: datetime) -> ChatMessage:
+    def _message(
+        self,
+        sender: MessageSender,
+        text: str,
+        now: datetime,
+        *,
+        client_message_id: str | None = None,
+    ) -> ChatMessage:
         return ChatMessage(
             id=self._id_factory(now),
             sender=sender,
             text=text,
             created_at=now,
+            client_message_id=client_message_id,
         )
 
     def create_conversation(self, *, locale: str = "id-ID") -> ConversationResult:
@@ -116,10 +135,30 @@ class ConversationService:
             )
         return context
 
-    def process_message(self, conversation_id: str, text: str) -> ConversationResult:
+    def process_message(
+        self,
+        conversation_id: str,
+        text: str,
+        *,
+        client_message_id: str | None = None,
+    ) -> ConversationResult:
         context = self.get_conversation(conversation_id)
+        if client_message_id is not None:
+            previous_result = self._find_idempotent_result(
+                context,
+                client_message_id=client_message_id,
+                text=text,
+            )
+            if previous_result is not None:
+                return previous_result
+
         now = self._clock()
-        user_message = self._message(MessageSender.USER, text, now)
+        user_message = self._message(
+            MessageSender.USER,
+            text,
+            now,
+            client_message_id=client_message_id,
+        )
         normalized = text.casefold().strip()
         state: ConversationState
         response_text: str
@@ -143,7 +182,7 @@ class ConversationService:
             decision = process_reservation_turn(
                 context,
                 text,
-                today=now.astimezone(JAKARTA_TIMEZONE).date(),
+                today=now.astimezone(self._timezone).date(),
             )
             state = decision.state
             response_text = decision.text
@@ -234,6 +273,13 @@ class ConversationService:
             last_confidence=confidence,
         )
         self._repository.save(updated)
+        self._log_turn(
+            before=context,
+            after=updated,
+            raw_text=text,
+            response_text=response_text,
+            now=now,
+        )
         if validation_field is not None:
             raise ApplicationError(
                 code="INVALID_SLOT",
@@ -242,6 +288,71 @@ class ConversationService:
                 field=validation_field,
             )
         return ConversationResult(context=updated, new_messages=new_messages)
+
+    def _find_idempotent_result(
+        self,
+        context: ConversationContext,
+        *,
+        client_message_id: str,
+        text: str,
+    ) -> ConversationResult | None:
+        for index, message in enumerate(context.messages):
+            if message.client_message_id != client_message_id:
+                continue
+            if message.text != text:
+                raise ApplicationError(
+                    code="CLIENT_MESSAGE_ID_CONFLICT",
+                    message=(
+                        "ID pesan tersebut sudah digunakan untuk isi pesan yang berbeda. "
+                        "Mohon kirim ulang dengan ID pesan baru."
+                    ),
+                    status_code=status.HTTP_409_CONFLICT,
+                    field="client_message_id",
+                )
+            new_messages = context.messages[index : index + 2]
+            return ConversationResult(context=context, new_messages=new_messages)
+        return None
+
+    def _log_turn(
+        self,
+        *,
+        before: ConversationContext,
+        after: ConversationContext,
+        raw_text: str,
+        response_text: str,
+        now: datetime,
+    ) -> None:
+        if self._turn_logger is None:
+            return
+
+        extracted_slots = {
+            field: value
+            for field, value in after.collected_slots.items()
+            if before.collected_slots.get(field) != value
+        }
+        masked_raw_text = mask_pii_text(raw_text, state=before.state)
+        model_version_value = getattr(self._predictor, "model_version", None)
+        model_version = str(model_version_value) if model_version_value is not None else None
+        self._turn_logger.append(
+            ConversationTurnEvent(
+                event_id=self._id_factory(now),
+                timestamp=now.astimezone(self._timezone).isoformat(),
+                conversation_id=after.conversation_id,
+                turn=sum(message.sender is MessageSender.USER for message in after.messages),
+                sender=MessageSender.USER.value,
+                raw_text=masked_raw_text,
+                normalized_text=normalize_log_text(masked_raw_text),
+                predicted_intent=(
+                    after.last_intent.value if after.last_intent is not None else None
+                ),
+                confidence=after.last_confidence,
+                state_before=before.state.value,
+                state_after=after.state.value,
+                extracted_slots=mask_extracted_slots(extracted_slots),
+                response_text=mask_pii_text(response_text),
+                model_version=model_version,
+            )
+        )
 
     def _handle_global_command(
         self,

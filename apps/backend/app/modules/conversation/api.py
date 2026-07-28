@@ -2,13 +2,19 @@
 
 from functools import lru_cache
 from typing import Annotated
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, status
+from sqlalchemy.orm import Session
 
 from app.modules.conversation.domain import ChatMessage, ConversationContext
+from app.modules.conversation.logger import (
+    ConversationTurnLogger,
+    JsonlConversationLogger,
+)
 from app.modules.conversation.repository import (
     ConversationRepository,
-    InMemoryConversationRepository,
+    SqlAlchemyConversationRepository,
 )
 from app.modules.conversation.schemas import (
     ChatMessageData,
@@ -26,16 +32,29 @@ from app.modules.conversation.service import (
 )
 from app.modules.nlp.model import IntentModel, ModelArtifactError, load_intent_model
 from app.shared.config import get_settings
+from app.shared.database import get_db_session
 from app.shared.errors import ApplicationError
 
 router = APIRouter(prefix="/conversations", tags=["conversations"])
-_repository = InMemoryConversationRepository()
 
 
-async def get_conversation_repository() -> ConversationRepository:
-    """Return the process-local repository; replace with SQL in CONV-08."""
+async def get_conversation_repository(
+    session: Annotated[Session, Depends(get_db_session)],
+) -> ConversationRepository:
+    """Return a transactional repository backed by configured MySQL."""
 
-    return _repository
+    return SqlAlchemyConversationRepository(session)
+
+
+@lru_cache
+def _load_conversation_logger() -> JsonlConversationLogger:
+    return JsonlConversationLogger(get_settings().conversation_log_dir)
+
+
+async def get_conversation_logger() -> ConversationTurnLogger:
+    """Return the process-wide append-only logger."""
+
+    return _load_conversation_logger()
 
 
 @lru_cache
@@ -130,9 +149,16 @@ async def send_message(
     payload: SendMessageRequest,
     repository: Annotated[ConversationRepository, Depends(get_conversation_repository)],
     predictor: Annotated[IntentPredictor, Depends(get_intent_predictor)],
+    turn_logger: Annotated[ConversationTurnLogger, Depends(get_conversation_logger)],
 ) -> ConversationResponse:
-    result = ConversationService(repository, predictor=predictor).process_message(
+    result = ConversationService(
+        repository,
+        predictor=predictor,
+        turn_logger=turn_logger,
+        timezone=ZoneInfo(get_settings().app_timezone),
+    ).process_message(
         conversation_id,
         payload.text,
+        client_message_id=payload.client_message_id,
     )
     return _response(result)
