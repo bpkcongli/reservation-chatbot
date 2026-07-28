@@ -1,0 +1,17 @@
+id,text,actual,predicted,confidence
+utt-0070,Berapa lama proses pengajuan jasa borongan?,borongan_info,pricing_info,0.198631
+utt-0187,Saya hendak mengajukan pekerjaan borongan,start_reservation,borongan_info,0.213965
+utt-0172,Pesankan spesialis pipa secepatnya,start_reservation,pricing_info,0.165026
+utt-0135,Apakah borongan dikenakan biaya survei?,pricing_info,borongan_info,0.326398
+utt-0160,Mulai pengajuan borongan untuk rumah saya,start_reservation,borongan_info,0.220855
+utt-0234,"Sip, itu saja",goodbye,harian_info,0.167427
+utt-0152,Kalau pilih setengah hari apakah lebih murah?,pricing_info,harian_info,0.154826
+utt-0038,Kasih daftar layanan yang dapat dipesan,service_overview,harian_info,0.157173
+utt-0098,Kalian menyediakan spesialis keramik?,harian_info,pricing_info,0.163821
+utt-0218,Selamat tinggal,goodbye,greeting,0.202067
+utt-0012,Apa kabar admin?,greeting,service_overview,0.183282
+utt-0157,Tolong buatkan pesanan tukang,start_reservation,reservation_status,0.175714
+utt-0204,Cek progres tukang harian saya,reservation_status,harian_info,0.186565
+utt-0037,Apakah melayani renovasi dan perbaikan kecil?,service_overview,borongan_info,0.151173
+utt-0132,Kalau pesan beberapa hari hitungannya bagaimana?,pricing_info,harian_info,0.15463
+utt-0113,Saya ingin tahu cakupan kerja spesialis pipa,harian_info,pricing_info,0.150758

@@ -1,0 +1,12 @@
+scope,precision,recall,f1_score,support
+borongan_info,0.6,0.857143,0.705882,7
+goodbye,1.0,0.6,0.75,5
+greeting,0.8,0.8,0.8,5
+harian_info,0.5,0.714286,0.588235,7
+pricing_info,0.428571,0.5,0.461538,6
+reservation_status,0.8,0.8,0.8,5
+service_overview,0.8,0.666667,0.727273,6
+start_reservation,1.0,0.428571,0.6,7
+macro_average,0.741071,0.670833,0.679116,48
+weighted_average,0.730655,0.666667,0.669619,48
+accuracy,0.666667,0.666667,0.666667,48

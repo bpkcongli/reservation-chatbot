@@ -1,0 +1,9 @@
+actual_intent,borongan_info,goodbye,greeting,harian_info,pricing_info,reservation_status,service_overview,start_reservation
+borongan_info,6,0,0,0,1,0,0,0
+goodbye,0,3,1,1,0,0,0,0
+greeting,0,0,4,0,0,0,1,0
+harian_info,0,0,0,5,2,0,0,0
+pricing_info,1,0,0,2,3,0,0,0
+reservation_status,0,0,0,1,0,4,0,0
+service_overview,1,0,0,1,0,0,4,0
+start_reservation,2,0,0,0,1,1,0,3

@@ -68,7 +68,21 @@ make dataset-review   # audit distribusi, duplicate, dan variasi
 make dataset-analyze  # analisis distribusi intent dan panjang teks
 make preprocessing-examples # export contoh preprocessing
 make nlp-data-artifacts # jalankan seluruh tahap data NLP-01–NLP-06
+make nlp-train       # train TF-IDF + Logistic Regression dan export evaluasi/model
+make nlp-artifacts   # generate seluruh data, model, dan evaluasi NLP baseline
 ```
+
+`make nlp-train` memakai stratified split 80/20 dan seed 42, melakukan
+5-fold cross-validation hanya pada training split, lalu menulis:
+
+- pipeline model dan metadata versioned ke `artifacts/models/`;
+- accuracy, classification report, confusion matrix CSV/PNG,
+  misclassification, dan distribusi split ke `artifacts/evaluation/`.
+
+Loader runtime tersedia melalui
+`app.modules.nlp.model.load_intent_model`. File `joblib` hanya boleh dimuat dari
+sumber lokal yang dipercaya; loader memverifikasi checksum artifact terhadap
+metadata sebelum inference.
 
 Untuk migration baru:
 

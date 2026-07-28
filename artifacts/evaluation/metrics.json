@@ -1,0 +1,30 @@
+{
+  "model_version": "tfidf-logreg-v1",
+  "dataset_sha256": "93641153746f7c85c17510ed00d224ae626aeafb1649bd0c29716df25feedb60",
+  "random_state": 42,
+  "train_samples": 192,
+  "test_samples": 48,
+  "best_cv_macro_f1": 0.704963,
+  "accuracy": 0.666667,
+  "macro_average": {
+    "precision": 0.741071,
+    "recall": 0.670833,
+    "f1_score": 0.679116,
+    "support": 48
+  },
+  "weighted_average": {
+    "precision": 0.730655,
+    "recall": 0.666667,
+    "f1_score": 0.669619,
+    "support": 48
+  },
+  "fallback": {
+    "confidence_threshold": 0.17,
+    "count": 11,
+    "rate": 0.229167,
+    "threshold_source": "5-fold out-of-fold predictions on training split",
+    "validation_accepted_accuracy": 0.776978,
+    "validation_coverage": 0.723958,
+    "minimum_validation_coverage": 0.5
+  }
+}

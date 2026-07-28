@@ -1,0 +1,17 @@
+split,intent,count,percentage
+train,borongan_info,28,14.58
+train,goodbye,20,10.42
+train,greeting,20,10.42
+train,harian_info,28,14.58
+train,pricing_info,24,12.5
+train,reservation_status,20,10.42
+train,service_overview,24,12.5
+train,start_reservation,28,14.58
+test,borongan_info,7,14.58
+test,goodbye,5,10.42
+test,greeting,5,10.42
+test,harian_info,7,14.58
+test,pricing_info,6,12.5
+test,reservation_status,5,10.42
+test,service_overview,6,12.5
+test,start_reservation,7,14.58

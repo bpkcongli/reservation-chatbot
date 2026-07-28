@@ -2,7 +2,8 @@ SHELL := /bin/bash
 
 .PHONY: install dev-backend dev-frontend db-up db-down db-logs migrate migration \
 	dataset-generate dataset-review dataset-analyze preprocessing-examples \
-	nlp-data-artifacts lint format format-check typecheck test build check
+	nlp-data-artifacts nlp-train nlp-artifacts lint format format-check typecheck \
+	test build check
 
 install:
 	uv sync --project apps/backend --dev
@@ -43,6 +44,11 @@ preprocessing-examples:
 
 nlp-data-artifacts: dataset-review dataset-analyze preprocessing-examples
 
+nlp-train: dataset-generate
+	uv run --project apps/backend python apps/backend/scripts/train_intent_classifier.py
+
+nlp-artifacts: nlp-data-artifacts nlp-train
+
 lint:
 	uv run --project apps/backend ruff check apps/backend
 	bun run --cwd apps/frontend lint
@@ -56,7 +62,7 @@ format-check:
 	bun run format:check
 
 typecheck:
-	uv run --project apps/backend mypy apps/backend/app
+	uv run --project apps/backend mypy --config-file apps/backend/pyproject.toml apps/backend/app
 	bun run --cwd apps/frontend typecheck
 
 test:

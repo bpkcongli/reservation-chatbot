@@ -56,13 +56,13 @@ Definition of Done:
 - [x] `NLP-04` Implement analyzer distribusi intent/panjang teks.
 - [x] `NLP-05` Implement preprocessing reusable beserta unit test.
 - [x] `NLP-06` Export contoh sebelum/sesudah preprocessing.
-- [ ] `NLP-07` Train TF-IDF + Logistic Regression pipeline dengan stratified
+- [x] `NLP-07` Train TF-IDF + Logistic Regression pipeline dengan stratified
   split dan seed tetap.
 - [ ] `NLP-08` Opsional: train MultinomialNB sebagai baseline pembanding.
-- [ ] `NLP-09` Generate accuracy, classification report, confusion matrix, dan
+- [x] `NLP-09` Generate accuracy, classification report, confusion matrix, dan
   daftar misclassification.
-- [ ] `NLP-10` Simpan artifact beserta checksum dataset dan metadata versi.
-- [ ] `NLP-11` Buat model loader dan unit test inference/fallback threshold.
+- [x] `NLP-10` Simpan artifact beserta checksum dataset dan metadata versi.
+- [x] `NLP-11` Buat model loader dan unit test inference/fallback threshold.
 
 Definition of Done:
 

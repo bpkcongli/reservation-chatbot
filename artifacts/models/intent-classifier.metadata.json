@@ -1,0 +1,85 @@
+{
+  "artifact_schema_version": 1,
+  "model_version": "tfidf-logreg-v1",
+  "artifact": {
+    "filename": "intent-classifier.joblib",
+    "sha256": "57bcc4ca740cd366eb9393711197cfd62bfd0f7d1b2d9429a916c7c2f9fccbe4",
+    "format": "joblib"
+  },
+  "dataset": {
+    "path": "data/raw/intents.csv",
+    "sha256": "93641153746f7c85c17510ed00d224ae626aeafb1649bd0c29716df25feedb60",
+    "total_samples": 240
+  },
+  "training": {
+    "trained_at_utc": "2026-07-28T21:07:37+00:00",
+    "random_state": 42,
+    "test_size": 0.2,
+    "cv_folds": 5,
+    "train_samples": 192,
+    "test_samples": 48,
+    "train_distribution": {
+      "borongan_info": 28,
+      "goodbye": 20,
+      "greeting": 20,
+      "harian_info": 28,
+      "pricing_info": 24,
+      "reservation_status": 20,
+      "service_overview": 24,
+      "start_reservation": 28
+    },
+    "test_distribution": {
+      "borongan_info": 7,
+      "goodbye": 5,
+      "greeting": 5,
+      "harian_info": 7,
+      "pricing_info": 6,
+      "reservation_status": 5,
+      "service_overview": 6,
+      "start_reservation": 7
+    },
+    "best_cv_macro_f1": 0.704963,
+    "best_parameters": {
+      "classifier__C": 0.5,
+      "tfidf__min_df": 1,
+      "tfidf__ngram_range": [
+        1,
+        1
+      ]
+    }
+  },
+  "inference": {
+    "labels": [
+      "borongan_info",
+      "goodbye",
+      "greeting",
+      "harian_info",
+      "pricing_info",
+      "reservation_status",
+      "service_overview",
+      "start_reservation"
+    ],
+    "confidence_threshold": 0.17,
+    "threshold_selection": {
+      "source": "5-fold out-of-fold predictions on training split",
+      "policy": "maximize accepted accuracy with minimum validation coverage",
+      "accepted_accuracy": 0.776978,
+      "coverage": 0.723958,
+      "accepted_count": 139,
+      "validation_count": 192,
+      "minimum_coverage": 0.5
+    },
+    "preprocessor": "app.modules.nlp.preprocessing.clean_text",
+    "tokenizer": "app.modules.nlp.preprocessing.tokenize_cleaned_text"
+  },
+  "runtime": {
+    "python": "3.12.3",
+    "libraries": {
+      "joblib": "1.5.3",
+      "matplotlib": "3.11.1",
+      "numpy": "2.5.1",
+      "scikit-learn": "1.9.0",
+      "scipy": "1.18.0"
+    }
+  }
+}
