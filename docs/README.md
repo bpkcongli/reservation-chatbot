@@ -43,7 +43,7 @@ Dokumentasi ini adalah source of truth untuk fase MVP `reservation-chatbot`.
 |---|---|
 | Product scope | Planned |
 | Architecture | Planned |
-| Dataset generation | NLP-01–NLP-03 complete |
+| Dataset generation and preprocessing | NLP-01–NLP-06 complete |
 | Backend implementation | Not started |
 | Frontend implementation | Not started |
 | Model evaluation | Not started |

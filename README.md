@@ -65,6 +65,9 @@ make db-logs       # ikuti log MySQL
 make db-down       # hentikan service Docker Compose
 make dataset-generate # hasilkan ulang dataset intent 240 baris
 make dataset-review   # audit distribusi, duplicate, dan variasi
+make dataset-analyze  # analisis distribusi intent dan panjang teks
+make preprocessing-examples # export contoh preprocessing
+make nlp-data-artifacts # jalankan seluruh tahap data NLP-01–NLP-06
 ```
 
 Untuk migration baru:

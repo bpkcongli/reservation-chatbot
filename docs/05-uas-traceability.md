@@ -14,10 +14,10 @@ requirement, bukan hanya menghasilkan aplikasi yang berjalan.
 | P1 | Struktur log percakapan | JSONL event schema | `CONV-07` |
 | P2 | Minimal 200 data | Target 240 utterance | `NLP-02` |
 | P2 | Minimal 4 intent | Target 8 intent | `NLP-01` |
-| P2 | Distribusi per intent | Tabel dan generated distribution CSV | `NLP-04` |
+| P2 | Distribusi per intent | `dataset-distribution.csv` dan statistik panjang teks | `NLP-04` |
 | P2 | Lowercase, cleaning, tokenization | Shared preprocessing pipeline | `NLP-05` |
 | P2 | Representasi teks | TF-IDF unigram/bigram | `NLP-07` |
-| P2 | Contoh sebelum/sesudah | `preprocessing-examples.csv` | `NLP-06` |
+| P2 | Contoh sebelum/sesudah | Generated `preprocessing-examples.csv` | `NLP-06` |
 | P3 | Intent classification | Logistic Regression pipeline | `NLP-07`, `CONV-03` |
 | P3 | Rule-based slot filling | Regex/pattern dan state-aware extractor | `CONV-05..06` |
 | P3 | Validasi identifier | Customer ID tepat 10 digit dan tiket `TKT-YYYYMMDD-XXXXXX` | `CONV-05..06`, `TKT-01` |
@@ -39,7 +39,8 @@ requirement, bukan hanya menghasilkan aplikasi yang berjalan.
 ## Checklist evidence akhir
 
 - [x] `data/raw/intents.csv` memiliki jumlah yang dilaporkan.
-- [ ] Distribution chart/table dihasilkan dari dataset yang sama.
+- [x] Distribution table dan statistik panjang dihasilkan dari dataset yang sama.
+- [x] `preprocessing-examples.csv` dihasilkan oleh reusable preprocessing.
 - [ ] Screenshot contoh preprocessing berasal dari output script.
 - [ ] `metrics.json` dan classification report konsisten.
 - [ ] Confusion matrix memiliki label intent yang terbaca.

@@ -104,6 +104,8 @@ reservation-chatbot/
 │   │   ├── scripts/
 │   │   │   ├── generate_intents_dataset.py
 │   │   │   ├── review_intents_dataset.py
+│   │   │   ├── analyze_intents_dataset.py
+│   │   │   ├── export_preprocessing_examples.py
 │   │   │   ├── train_model.py
 │   │   │   └── evaluate_model.py
 │   │   ├── tests/
@@ -130,7 +132,12 @@ reservation-chatbot/
 │   └── README.md
 ├── artifacts/
 │   ├── models/.gitkeep
-│   └── evaluation/.gitkeep
+│   └── evaluation/
+│       ├── dataset-analysis.json
+│       ├── dataset-distribution.csv
+│       ├── preprocessing-examples.csv
+│       ├── text-length-summary.csv
+│       └── text-lengths.csv
 ├── storage/uploads/.gitkeep
 ├── docs/
 ├── compose.yaml

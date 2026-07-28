@@ -53,9 +53,9 @@ Definition of Done:
 - [x] `NLP-02` Implement deterministic dataset generator 240 utterance.
 - [x] `NLP-03` Review manual untuk duplicate, near-duplicate, variasi, dan
   konsistensi label.
-- [ ] `NLP-04` Implement analyzer distribusi intent/panjang teks.
-- [ ] `NLP-05` Implement preprocessing reusable beserta unit test.
-- [ ] `NLP-06` Export contoh sebelum/sesudah preprocessing.
+- [x] `NLP-04` Implement analyzer distribusi intent/panjang teks.
+- [x] `NLP-05` Implement preprocessing reusable beserta unit test.
+- [x] `NLP-06` Export contoh sebelum/sesudah preprocessing.
 - [ ] `NLP-07` Train TF-IDF + Logistic Regression pipeline dengan stratified
   split dan seed tetap.
 - [ ] `NLP-08` Opsional: train MultinomialNB sebagai baseline pembanding.

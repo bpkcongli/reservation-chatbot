@@ -1,7 +1,8 @@
 SHELL := /bin/bash
 
 .PHONY: install dev-backend dev-frontend db-up db-down db-logs migrate migration \
-	dataset-generate dataset-review lint format format-check typecheck test build check
+	dataset-generate dataset-review dataset-analyze preprocessing-examples \
+	nlp-data-artifacts lint format format-check typecheck test build check
 
 install:
 	uv sync --project apps/backend --dev
@@ -33,6 +34,14 @@ dataset-generate:
 
 dataset-review: dataset-generate
 	uv run --project apps/backend python apps/backend/scripts/review_intents_dataset.py
+
+dataset-analyze: dataset-generate
+	uv run --project apps/backend python apps/backend/scripts/analyze_intents_dataset.py
+
+preprocessing-examples:
+	uv run --project apps/backend python apps/backend/scripts/export_preprocessing_examples.py
+
+nlp-data-artifacts: dataset-review dataset-analyze preprocessing-examples
 
 lint:
 	uv run --project apps/backend ruff check apps/backend

@@ -136,13 +136,19 @@ Urutan pipeline:
 6. Pertahankan kata/angka yang informatif; ubah tanda baca lain menjadi spasi.
 7. Tokenisasi dengan regex.
 
+Token khusus canonical adalah `urltoken`, `emailtoken`, dan `phonetoken`.
+Implementasi reusable berada di `app/modules/nlp/preprocessing.py`. Fungsi
+`clean_text` dan `tokenize_cleaned_text` wajib direferensikan oleh training dan
+inference agar transformasi input tidak berbeda.
+
 Stemming dan stopword removal tidak digunakan pada baseline. Untuk utterance
 pendek, stopword seperti “mau”, “apa”, dan “berapa” dapat membantu membedakan
 intent. Stemming Bahasa Indonesia dapat diuji sebagai eksperimen terpisah,
 tetapi hasilnya harus dibandingkan dengan baseline.
 
-Contoh yang nantinya wajib dihasilkan oleh script, bukan diketik manual di
-laporan:
+Contoh berikut dihasilkan oleh script
+`apps/backend/scripts/export_preprocessing_examples.py`, bukan diketik manual
+ke artifact:
 
 | Sebelum | Setelah cleaning/lowercase | Token |
 |---|---|---|
@@ -152,6 +158,20 @@ laporan:
 
 Preprocessor yang sama harus dipakai saat training dan inference. Cara paling
 aman adalah membungkusnya di sklearn `Pipeline`.
+
+Hasil NLP-04–NLP-06 tersimpan di `artifacts/evaluation/`:
+
+- `dataset-distribution.csv` untuk jumlah dan persentase tiap intent.
+- `text-lengths.csv` untuk panjang karakter/token setiap utterance.
+- `text-length-summary.csv` dan `dataset-analysis.json` untuk statistik
+  keseluruhan serta per intent.
+- `preprocessing-examples.csv` untuk contoh sebelum, sesudah cleaning, dan
+  token.
+
+Pada dataset saat ini, panjang keseluruhan berada pada rentang 4–58 karakter
+dan 1–8 token, dengan rata-rata 33,94 karakter dan 5,13 token. Angka laporan
+harus tetap diambil dari artifact karena dapat berubah ketika dataset
+diregenerasi.
 
 ## 4. Representasi dan intent classification
 

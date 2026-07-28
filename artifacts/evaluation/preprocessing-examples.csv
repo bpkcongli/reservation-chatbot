@@ -1,0 +1,6 @@
+example_id,original_text,cleaned_text,tokens
+example-01,Halo Kak!! Ada jasa tukang listrik?,halo kak ada jasa tukang listrik,"[""halo"",""kak"",""ada"",""jasa"",""tukang"",""listrik""]"
+example-02,Saya mau BOOKING tukang utk 02/08/2026.,saya mau booking tukang utk 02 08 2026,"[""saya"",""mau"",""booking"",""tukang"",""utk"",""02"",""08"",""2026""]"
+example-03,Cek tiket TKT-20260728-AB12CD dong,cek tiket tkt 20260728 ab12cd dong,"[""cek"",""tiket"",""tkt"",""20260728"",""ab12cd"",""dong""]"
+example-04,Hubungi 0812 3456 7890 atau CS@example.com,hubungi phonetoken atau emailtoken,"[""hubungi"",""phonetoken"",""atau"",""emailtoken""]"
+example-05,<b>Lihat info</b> di https://contoh.id/layanan,lihat info di urltoken,"[""lihat"",""info"",""di"",""urltoken""]"

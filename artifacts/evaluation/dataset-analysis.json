@@ -1,0 +1,156 @@
+{
+  "total": 240,
+  "sha256": "93641153746f7c85c17510ed00d224ae626aeafb1649bd0c29716df25feedb60",
+  "distribution": [
+    {
+      "intent": "greeting",
+      "count": 25,
+      "percentage": 10.42
+    },
+    {
+      "intent": "service_overview",
+      "count": 30,
+      "percentage": 12.5
+    },
+    {
+      "intent": "borongan_info",
+      "count": 35,
+      "percentage": 14.58
+    },
+    {
+      "intent": "harian_info",
+      "count": 35,
+      "percentage": 14.58
+    },
+    {
+      "intent": "pricing_info",
+      "count": 30,
+      "percentage": 12.5
+    },
+    {
+      "intent": "start_reservation",
+      "count": 35,
+      "percentage": 14.58
+    },
+    {
+      "intent": "reservation_status",
+      "count": 25,
+      "percentage": 10.42
+    },
+    {
+      "intent": "goodbye",
+      "count": 25,
+      "percentage": 10.42
+    }
+  ],
+  "text_length_summary": [
+    {
+      "scope": "all",
+      "count": 240,
+      "min_characters": 4,
+      "max_characters": 58,
+      "mean_characters": 33.94,
+      "median_characters": 36.0,
+      "min_tokens": 1,
+      "max_tokens": 8,
+      "mean_tokens": 5.13,
+      "median_tokens": 5.0
+    },
+    {
+      "scope": "greeting",
+      "count": 25,
+      "min_characters": 4,
+      "max_characters": 27,
+      "mean_characters": 15.28,
+      "median_characters": 15.0,
+      "min_tokens": 1,
+      "max_tokens": 5,
+      "mean_tokens": 2.72,
+      "median_tokens": 3.0
+    },
+    {
+      "scope": "service_overview",
+      "count": 30,
+      "min_characters": 22,
+      "max_characters": 51,
+      "mean_characters": 36.93,
+      "median_characters": 36.0,
+      "min_tokens": 4,
+      "max_tokens": 8,
+      "mean_tokens": 5.9,
+      "median_tokens": 6.0
+    },
+    {
+      "scope": "borongan_info",
+      "count": 35,
+      "min_characters": 32,
+      "max_characters": 58,
+      "mean_characters": 45.51,
+      "median_characters": 46.0,
+      "min_tokens": 5,
+      "max_tokens": 8,
+      "mean_tokens": 6.34,
+      "median_tokens": 6.0
+    },
+    {
+      "scope": "harian_info",
+      "count": 35,
+      "min_characters": 29,
+      "max_characters": 55,
+      "mean_characters": 42.14,
+      "median_characters": 43.0,
+      "min_tokens": 4,
+      "max_tokens": 8,
+      "mean_tokens": 6.31,
+      "median_tokens": 7.0
+    },
+    {
+      "scope": "pricing_info",
+      "count": 30,
+      "min_characters": 21,
+      "max_characters": 48,
+      "mean_characters": 37.37,
+      "median_characters": 38.5,
+      "min_tokens": 4,
+      "max_tokens": 8,
+      "mean_tokens": 5.53,
+      "median_tokens": 5.5
+    },
+    {
+      "scope": "start_reservation",
+      "count": 35,
+      "min_characters": 23,
+      "max_characters": 45,
+      "mean_characters": 31.83,
+      "median_characters": 32.0,
+      "min_tokens": 3,
+      "max_tokens": 6,
+      "mean_tokens": 4.8,
+      "median_tokens": 5.0
+    },
+    {
+      "scope": "reservation_status",
+      "count": 25,
+      "min_characters": 23,
+      "max_characters": 48,
+      "mean_characters": 35.12,
+      "median_characters": 34.0,
+      "min_tokens": 4,
+      "max_tokens": 7,
+      "mean_tokens": 5.24,
+      "median_tokens": 5.0
+    },
+    {
+      "scope": "goodbye",
+      "count": 25,
+      "min_characters": 5,
+      "max_characters": 38,
+      "mean_characters": 18.96,
+      "median_characters": 18.0,
+      "min_tokens": 1,
+      "max_tokens": 6,
+      "mean_tokens": 3.12,
+      "median_tokens": 3.0
+    }
+  ]
+}
