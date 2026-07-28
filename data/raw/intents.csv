@@ -1,0 +1,241 @@
+id,text,intent,source
+utt-0001,Halo,greeting,synthetic_manual
+utt-0002,Hai kak,greeting,synthetic_manual
+utt-0003,Selamat pagi,greeting,synthetic_manual
+utt-0004,"Selamat siang, admin",greeting,synthetic_manual
+utt-0005,Selamat sore semuanya,greeting,synthetic_manual
+utt-0006,Malam min,greeting,synthetic_manual
+utt-0007,Permisi,greeting,synthetic_manual
+utt-0008,"Halo, ada yang bisa bantu?",greeting,synthetic_manual
+utt-0009,Hai bot tukang,greeting,synthetic_manual
+utt-0010,"Pagi kak, semoga sehat",greeting,synthetic_manual
+utt-0011,Assalamualaikum,greeting,synthetic_manual
+utt-0012,Apa kabar admin?,greeting,synthetic_manual
+utt-0013,Halo halo,greeting,synthetic_manual
+utt-0014,"Tes, apakah chat ini aktif?",greeting,synthetic_manual
+utt-0015,"Hai, saya baru datang",greeting,synthetic_manual
+utt-0016,"Min, boleh tanya?",greeting,synthetic_manual
+utt-0017,Selamat malam,greeting,synthetic_manual
+utt-0018,"Hello, ada orang?",greeting,synthetic_manual
+utt-0019,Permisi kak admin,greeting,synthetic_manual
+utt-0020,"Halo, saya mau ngobrol",greeting,synthetic_manual
+utt-0021,Pagi semuanya,greeting,synthetic_manual
+utt-0022,Hai chatbot,greeting,synthetic_manual
+utt-0023,Adminnya online?,greeting,synthetic_manual
+utt-0024,Salam kenal ya,greeting,synthetic_manual
+utt-0025,Woi halo min,greeting,synthetic_manual
+utt-0026,Layanan apa saja yang tersedia?,service_overview,synthetic_manual
+utt-0027,Bisa bantu pekerjaan tukang apa aja?,service_overview,synthetic_manual
+utt-0028,Tolong jelaskan jasa yang kalian punya,service_overview,synthetic_manual
+utt-0029,Di sini melayani apa ya?,service_overview,synthetic_manual
+utt-0030,"Ada pilihan layanan apa saja, kak?",service_overview,synthetic_manual
+utt-0031,Saya ingin tahu gambaran layanan kalian,service_overview,synthetic_manual
+utt-0032,Jenis tukangnya ada apa aja?,service_overview,synthetic_manual
+utt-0033,Apa bedanya jasa borongan dan tukang harian?,service_overview,synthetic_manual
+utt-0034,Bingung pilih borongan atau harian,service_overview,synthetic_manual
+utt-0035,Jelaskan pilihan jasa tukang dong,service_overview,synthetic_manual
+utt-0036,Untuk perbaikan rumah bisa pakai layanan yang mana?,service_overview,synthetic_manual
+utt-0037,Apakah melayani renovasi dan perbaikan kecil?,service_overview,synthetic_manual
+utt-0038,Kasih daftar layanan yang dapat dipesan,service_overview,synthetic_manual
+utt-0039,Pekerjaan bangunan apa yang bisa dibantu?,service_overview,synthetic_manual
+utt-0040,Ada jasa untuk rumah dan ruko tidak?,service_overview,synthetic_manual
+utt-0041,Mau lihat menu layanan,service_overview,synthetic_manual
+utt-0042,Tampilkan katalog jasa secara umum,service_overview,synthetic_manual
+utt-0043,Kalian punya layanan tukang apa?,service_overview,synthetic_manual
+utt-0044,"Saya butuh bantuan hunian, opsinya apa saja?",service_overview,synthetic_manual
+utt-0045,Bagaimana cara memilih jenis layanan?,service_overview,synthetic_manual
+utt-0046,Layanan di aplikasi ini untuk kebutuhan apa?,service_overview,synthetic_manual
+utt-0047,Boleh minta penjelasan singkat soal layanan?,service_overview,synthetic_manual
+utt-0048,Apakah ada tukang untuk proyek besar maupun kecil?,service_overview,synthetic_manual
+utt-0049,Menu jasa tukangnya apa aja sih,service_overview,synthetic_manual
+utt-0050,Sebutkan dua jenis layanan utama,service_overview,synthetic_manual
+utt-0051,Aku belum tahu harus pilih jasa yang mana,service_overview,synthetic_manual
+utt-0052,Cakupan layanan platform ini apa?,service_overview,synthetic_manual
+utt-0053,Bisa jelaskan layanan dari awal?,service_overview,synthetic_manual
+utt-0054,Pilihan servis bangunannya apa saja?,service_overview,synthetic_manual
+utt-0055,Saya mau membandingkan opsi tukang yang ada,service_overview,synthetic_manual
+utt-0056,Apa yang dimaksud Jasa Borongan?,borongan_info,synthetic_manual
+utt-0057,Jelaskan cara kerja proyek borongan,borongan_info,synthetic_manual
+utt-0058,Pekerjaan apa saja yang masuk layanan borongan?,borongan_info,synthetic_manual
+utt-0059,Borongan cocok untuk kebutuhan seperti apa?,borongan_info,synthetic_manual
+utt-0060,Apakah renovasi rumah bisa dikerjakan borongan?,borongan_info,synthetic_manual
+utt-0061,Kalau perbaikan ruko besar pilih borongan ya?,borongan_info,synthetic_manual
+utt-0062,Jasa borongan menerima proyek apartemen?,borongan_info,synthetic_manual
+utt-0063,Bangunan apa saja yang dilayani secara borongan?,borongan_info,synthetic_manual
+utt-0064,Apakah sebelum borongan ada survei lokasi?,borongan_info,synthetic_manual
+utt-0065,Bagaimana proses survei untuk proyek borongan?,borongan_info,synthetic_manual
+utt-0066,Data apa yang dibutuhkan untuk survei borongan?,borongan_info,synthetic_manual
+utt-0067,Alamat survei diberikan saat tahap mana?,borongan_info,synthetic_manual
+utt-0068,Bisakah saya memilih tanggal survei borongan?,borongan_info,synthetic_manual
+utt-0069,Jam survei proyek tersedia kapan saja?,borongan_info,synthetic_manual
+utt-0070,Berapa lama proses pengajuan jasa borongan?,borongan_info,synthetic_manual
+utt-0071,Apakah borongan mencakup bahan bangunan?,borongan_info,synthetic_manual
+utt-0072,Siapa yang menentukan detail pekerjaan borongan?,borongan_info,synthetic_manual
+utt-0073,"Setelah survei, proses borongan lanjut ke mana?",borongan_info,synthetic_manual
+utt-0074,Untuk renovasi total sebaiknya pakai borongan?,borongan_info,synthetic_manual
+utt-0075,Saya mau tahu cakupan pengerjaan borongan,borongan_info,synthetic_manual
+utt-0076,Borongan itu berdasarkan proyek atau jumlah hari?,borongan_info,synthetic_manual
+utt-0077,Apakah jasa borongan hanya untuk rumah?,borongan_info,synthetic_manual
+utt-0078,Bisa pakai borongan untuk memperbaiki banyak ruangan?,borongan_info,synthetic_manual
+utt-0079,Kalau proyeknya besar bagaimana alur borongannya?,borongan_info,synthetic_manual
+utt-0080,Survei borongan dilakukan di lokasi bangunan kan?,borongan_info,synthetic_manual
+utt-0081,Apa saja yang perlu disiapkan sebelum survei?,borongan_info,synthetic_manual
+utt-0082,Jenis bangunan ruko termasuk cakupan borongan tidak?,borongan_info,synthetic_manual
+utt-0083,Minta info lengkap mengenai layanan borongan,borongan_info,synthetic_manual
+utt-0084,Apakah jadwal survei bisa dipilih sendiri?,borongan_info,synthetic_manual
+utt-0085,Aku ingin paham tahap-tahap jasa borongan,borongan_info,synthetic_manual
+utt-0086,Pengerjaan borongan perlu menentukan spesialisasi tukang?,borongan_info,synthetic_manual
+utt-0087,Apakah budget proyek dicatat saat mengajukan borongan?,borongan_info,synthetic_manual
+utt-0088,"Untuk bongkar dan renovasi beberapa bagian, bisa borongan?",borongan_info,synthetic_manual
+utt-0089,Bedanya survei borongan dengan mulai pengerjaan apa?,borongan_info,synthetic_manual
+utt-0090,"Jasa borongan menangani satu paket pekerjaan, ya?",borongan_info,synthetic_manual
+utt-0091,Apa itu layanan Tukang Harian?,harian_info,synthetic_manual
+utt-0092,Bagaimana cara kerja tukang harian?,harian_info,synthetic_manual
+utt-0093,Spesialisasi tukang apa saja yang tersedia?,harian_info,synthetic_manual
+utt-0094,Apakah ada tukang khusus cat?,harian_info,synthetic_manual
+utt-0095,"Saya mencari spesialis genteng, tersedia?",harian_info,synthetic_manual
+utt-0096,Ada teknisi AC dalam layanan harian tidak?,harian_info,synthetic_manual
+utt-0097,Apakah bisa memesan tukang listrik?,harian_info,synthetic_manual
+utt-0098,Kalian menyediakan spesialis keramik?,harian_info,synthetic_manual
+utt-0099,Tukang pipa termasuk pilihan harian?,harian_info,synthetic_manual
+utt-0100,Pekerjaan kecil cocok memakai tukang harian ya?,harian_info,synthetic_manual
+utt-0101,Satu tukang bisa dipesan untuk beberapa hari?,harian_info,synthetic_manual
+utt-0102,Berapa orang tukang yang boleh dipilih?,harian_info,synthetic_manual
+utt-0103,Apa saja sesi kerja Tukang Harian?,harian_info,synthetic_manual
+utt-0104,Ada pilihan kerja setengah hari pagi?,harian_info,synthetic_manual
+utt-0105,Apakah tersedia sesi sore untuk tukang harian?,harian_info,synthetic_manual
+utt-0106,Full day itu berapa lama dalam layanan ini?,harian_info,synthetic_manual
+utt-0107,Bisa tentukan tanggal mulai dan selesai pekerjaan?,harian_info,synthetic_manual
+utt-0108,Foto masalah wajib untuk pesan tukang harian?,harian_info,synthetic_manual
+utt-0109,Data apa yang diperlukan untuk layanan harian?,harian_info,synthetic_manual
+utt-0110,Apakah deskripsi kerusakan harus ditulis?,harian_info,synthetic_manual
+utt-0111,Tukang harian datang ke alamat yang saya berikan?,harian_info,synthetic_manual
+utt-0112,Kalau cuma memperbaiki satu titik pilih harian?,harian_info,synthetic_manual
+utt-0113,Saya ingin tahu cakupan kerja spesialis pipa,harian_info,synthetic_manual
+utt-0114,Bisakah pesan dua spesialis dalam satu reservasi?,harian_info,synthetic_manual
+utt-0115,Tukang harian tersedia untuk apartemen juga?,harian_info,synthetic_manual
+utt-0116,Apakah saya dapat memilih jumlah pekerja?,harian_info,synthetic_manual
+utt-0117,Jelaskan alur layanan harian dari awal,harian_info,synthetic_manual
+utt-0118,Untuk cat satu kamar cocoknya tukang harian?,harian_info,synthetic_manual
+utt-0119,Boleh melewati upload foto kerusakan?,harian_info,synthetic_manual
+utt-0120,Apa perbedaan sesi pagi dan sehari penuh?,harian_info,synthetic_manual
+utt-0121,Mau tahu daftar keahlian tukang harian,harian_info,synthetic_manual
+utt-0122,Apakah tukang harian dihitung per tanggal kerja?,harian_info,synthetic_manual
+utt-0123,Pemasangan keramik kecil bisa ditangani layanan harian?,harian_info,synthetic_manual
+utt-0124,"Kalau AC bermasalah, spesialis mana yang dipilih?",harian_info,synthetic_manual
+utt-0125,Apakah jadwal kerja harian bisa lebih dari sehari?,harian_info,synthetic_manual
+utt-0126,Berapa harga layanan tukang?,pricing_info,synthetic_manual
+utt-0127,Minta daftar tarif dong,pricing_info,synthetic_manual
+utt-0128,Biaya jasa borongan berapa?,pricing_info,synthetic_manual
+utt-0129,Berapa tarif tukang harian per hari?,pricing_info,synthetic_manual
+utt-0130,Cara menghitung estimasi harga harian bagaimana?,pricing_info,synthetic_manual
+utt-0131,Apakah jumlah pekerja memengaruhi total biaya?,pricing_info,synthetic_manual
+utt-0132,Kalau pesan beberapa hari hitungannya bagaimana?,pricing_info,synthetic_manual
+utt-0133,Sesi pagi tarifnya sama dengan full day?,pricing_info,synthetic_manual
+utt-0134,Berapa biaya admin setiap reservasi?,pricing_info,synthetic_manual
+utt-0135,Apakah borongan dikenakan biaya survei?,pricing_info,synthetic_manual
+utt-0136,Harga dasar borongan rumah berapa?,pricing_info,synthetic_manual
+utt-0137,Minta estimasi borongan untuk apartemen,pricing_info,synthetic_manual
+utt-0138,Berapa biaya dasar proyek ruko?,pricing_info,synthetic_manual
+utt-0139,Tarif spesialis cat sehari berapa?,pricing_info,synthetic_manual
+utt-0140,Berapa ongkos tukang genteng full day?,pricing_info,synthetic_manual
+utt-0141,Harga teknisi AC untuk sesi pagi?,pricing_info,synthetic_manual
+utt-0142,Spesialis listrik tarif sorenya berapa?,pricing_info,synthetic_manual
+utt-0143,Saya ingin tahu biaya tukang keramik,pricing_info,synthetic_manual
+utt-0144,Ongkos spesialis pipa dihitung bagaimana?,pricing_info,synthetic_manual
+utt-0145,Apakah harga yang tampil sudah termasuk admin?,pricing_info,synthetic_manual
+utt-0146,Ada pajak atau biaya tersembunyi tidak?,pricing_info,synthetic_manual
+utt-0147,Budget saya memengaruhi harga borongan?,pricing_info,synthetic_manual
+utt-0148,Ini harga tetap atau hanya perkiraan?,pricing_info,synthetic_manual
+utt-0149,Versi harga demo maksudnya apa?,pricing_info,synthetic_manual
+utt-0150,Tolong buatkan gambaran komponen biayanya,pricing_info,synthetic_manual
+utt-0151,Dua tukang selama tiga hari kira-kira berapa?,pricing_info,synthetic_manual
+utt-0152,Kalau pilih setengah hari apakah lebih murah?,pricing_info,synthetic_manual
+utt-0153,"Total pembayaran dihitung oleh sistem, kan?",pricing_info,synthetic_manual
+utt-0154,Brp trf tukng harian?,pricing_info,synthetic_manual
+utt-0155,Ada diskon untuk pemesanan lebih lama?,pricing_info,synthetic_manual
+utt-0156,Saya mau mulai reservasi,start_reservation,synthetic_manual
+utt-0157,Tolong buatkan pesanan tukang,start_reservation,synthetic_manual
+utt-0158,Bisa bantu saya booking sekarang?,start_reservation,synthetic_manual
+utt-0159,Saya ingin memesan Jasa Borongan,start_reservation,synthetic_manual
+utt-0160,Mulai pengajuan borongan untuk rumah saya,start_reservation,synthetic_manual
+utt-0161,Tolong jadwalkan survei borongan,start_reservation,synthetic_manual
+utt-0162,Saya jadi ambil layanan borongan,start_reservation,synthetic_manual
+utt-0163,Mau booking proyek renovasi ruko,start_reservation,synthetic_manual
+utt-0164,Pesankan borongan untuk apartemen saya,start_reservation,synthetic_manual
+utt-0165,Saya siap isi data reservasi borongan,start_reservation,synthetic_manual
+utt-0166,Bantu pesan Tukang Harian dong,start_reservation,synthetic_manual
+utt-0167,Saya mau booking tukang cat,start_reservation,synthetic_manual
+utt-0168,Jadwalkan spesialis genteng untuk saya,start_reservation,synthetic_manual
+utt-0169,Tolong pesan teknisi AC,start_reservation,synthetic_manual
+utt-0170,"Saya butuh tukang listrik, mulai reservasinya",start_reservation,synthetic_manual
+utt-0171,Mau sewa tukang keramik harian,start_reservation,synthetic_manual
+utt-0172,Pesankan spesialis pipa secepatnya,start_reservation,synthetic_manual
+utt-0173,"Saya pilih tukang harian, lanjutkan",start_reservation,synthetic_manual
+utt-0174,Ayo mulai proses pemesanan,start_reservation,synthetic_manual
+utt-0175,Saya sudah siap melakukan reservasi,start_reservation,synthetic_manual
+utt-0176,Langsung booking aja ya,start_reservation,synthetic_manual
+utt-0177,Boking tukang buat besok dong,start_reservation,synthetic_manual
+utt-0178,Mulai form pesanan saya,start_reservation,synthetic_manual
+utt-0179,Saya ingin menjadwalkan tukang ke rumah,start_reservation,synthetic_manual
+utt-0180,Tolong arahkan ke proses booking,start_reservation,synthetic_manual
+utt-0181,Bisa mulai catat data pemesanan saya?,start_reservation,synthetic_manual
+utt-0182,"Oke, saya mau pesan layanan ini",start_reservation,synthetic_manual
+utt-0183,Lanjut ke reservasi sekarang,start_reservation,synthetic_manual
+utt-0184,Buat reservasi baru untuk saya,start_reservation,synthetic_manual
+utt-0185,Saya perlu tukang dan ingin memesannya,start_reservation,synthetic_manual
+utt-0186,Pengen booking layanan harian,start_reservation,synthetic_manual
+utt-0187,Saya hendak mengajukan pekerjaan borongan,start_reservation,synthetic_manual
+utt-0188,Siapkan pesanan tukang baru,start_reservation,synthetic_manual
+utt-0189,Mari jadwalkan kunjungan tukang,start_reservation,synthetic_manual
+utt-0190,Reservsi sekarang bisa?,start_reservation,synthetic_manual
+utt-0191,Saya mau cek status reservasi,reservation_status,synthetic_manual
+utt-0192,Pesanan saya sudah sampai mana?,reservation_status,synthetic_manual
+utt-0193,Tolong lacak tiket saya,reservation_status,synthetic_manual
+utt-0194,Bagaimana progres booking saya?,reservation_status,synthetic_manual
+utt-0195,Saya ingin melihat status tiket,reservation_status,synthetic_manual
+utt-0196,Reservasi kemarin sudah diproses belum?,reservation_status,synthetic_manual
+utt-0197,Cek pesanan tukang saya dong,reservation_status,synthetic_manual
+utt-0198,Di mana saya bisa mengecek tiket?,reservation_status,synthetic_manual
+utt-0199,Apakah reservasi saya masih menunggu pembayaran?,reservation_status,synthetic_manual
+utt-0200,Tiket saya statusnya apa sekarang?,reservation_status,synthetic_manual
+utt-0201,Bantu periksa nomor tiket ini,reservation_status,synthetic_manual
+utt-0202,Mau lihat detail reservasi yang sudah dibuat,reservation_status,synthetic_manual
+utt-0203,Bagaimana cara melacak pesanan borongan?,reservation_status,synthetic_manual
+utt-0204,Cek progres tukang harian saya,reservation_status,synthetic_manual
+utt-0205,Apakah booking saya sudah tercatat?,reservation_status,synthetic_manual
+utt-0206,Saya punya tiket dan ingin memeriksa statusnya,reservation_status,synthetic_manual
+utt-0207,Tolong tampilkan kembali pesanan saya,reservation_status,synthetic_manual
+utt-0208,Reservasi saya aktif atau tidak?,reservation_status,synthetic_manual
+utt-0209,Sudah ada perkembangan untuk permintaan saya?,reservation_status,synthetic_manual
+utt-0210,Saya ingin konfirmasi keadaan tiket,reservation_status,synthetic_manual
+utt-0211,Lacak reservasi berdasarkan nomor tiket,reservation_status,synthetic_manual
+utt-0212,Status pembayaran pesanan saya bagaimana?,reservation_status,synthetic_manual
+utt-0213,Bisa cari tiket reservasi saya?,reservation_status,synthetic_manual
+utt-0214,Mau cek kelanjutan order tukang,reservation_status,synthetic_manual
+utt-0215,Pesanan yang tadi bisa dilihat lagi?,reservation_status,synthetic_manual
+utt-0216,Sampai jumpa,goodbye,synthetic_manual
+utt-0217,Dadah,goodbye,synthetic_manual
+utt-0218,Selamat tinggal,goodbye,synthetic_manual
+utt-0219,"Terima kasih, cukup",goodbye,synthetic_manual
+utt-0220,"Oke makasih, saya pergi dulu",goodbye,synthetic_manual
+utt-0221,Percakapannya selesai ya,goodbye,synthetic_manual
+utt-0222,Saya tidak punya pertanyaan lagi,goodbye,synthetic_manual
+utt-0223,Sudah dulu chatnya,goodbye,synthetic_manual
+utt-0224,Bye admin,goodbye,synthetic_manual
+utt-0225,Sampai ketemu lagi,goodbye,synthetic_manual
+utt-0226,"Makasih banyak, dadah",goodbye,synthetic_manual
+utt-0227,Cukup sekian,goodbye,synthetic_manual
+utt-0228,Saya pamit,goodbye,synthetic_manual
+utt-0229,Tutup percakapan ini,goodbye,synthetic_manual
+utt-0230,"Oke, selesai",goodbye,synthetic_manual
+utt-0231,Terima kasih atas bantuannya,goodbye,synthetic_manual
+utt-0232,Nanti saya kembali lagi,goodbye,synthetic_manual
+utt-0233,Udahan ya kak,goodbye,synthetic_manual
+utt-0234,"Sip, itu saja",goodbye,synthetic_manual
+utt-0235,"Tidak perlu dibantu lagi, makasih",goodbye,synthetic_manual
+utt-0236,Saya akhiri chatnya,goodbye,synthetic_manual
+utt-0237,Sampai nanti min,goodbye,synthetic_manual
+utt-0238,"Baik, terima kasih dan selamat tinggal",goodbye,synthetic_manual
+utt-0239,Informasinya sudah cukup,goodbye,synthetic_manual
+utt-0240,"Oke deh, bye",goodbye,synthetic_manual

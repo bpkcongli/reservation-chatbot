@@ -102,7 +102,8 @@ reservation-chatbot/
 │   │   │       └── ticketing/
 │   │   ├── migrations/
 │   │   ├── scripts/
-│   │   │   ├── generate_dataset.py
+│   │   │   ├── generate_intents_dataset.py
+│   │   │   ├── review_intents_dataset.py
 │   │   │   ├── train_model.py
 │   │   │   └── evaluate_model.py
 │   │   ├── tests/
@@ -124,6 +125,7 @@ reservation-chatbot/
 ├── data/
 │   ├── raw/intents.csv
 │   ├── processed/
+│   ├── reviews/
 │   ├── logs/.gitkeep
 │   └── README.md
 ├── artifacts/

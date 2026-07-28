@@ -1,0 +1,106 @@
+{
+  "row_count": 240,
+  "sha256": "93641153746f7c85c17510ed00d224ae626aeafb1649bd0c29716df25feedb60",
+  "distribution": {
+    "borongan_info": 35,
+    "goodbye": 25,
+    "greeting": 25,
+    "harian_info": 35,
+    "pricing_info": 30,
+    "reservation_status": 25,
+    "service_overview": 30,
+    "start_reservation": 35
+  },
+  "issues": [],
+  "near_duplicate_count": 0,
+  "variation": [
+    {
+      "intent": "greeting",
+      "count": 25,
+      "min_tokens": 1,
+      "max_tokens": 5,
+      "mean_tokens": 2.72,
+      "question_like": 6,
+      "conversational": 8,
+      "formal": 3,
+      "typo_examples": 0
+    },
+    {
+      "intent": "service_overview",
+      "count": 30,
+      "min_tokens": 4,
+      "max_tokens": 8,
+      "mean_tokens": 5.9,
+      "question_like": 19,
+      "conversational": 8,
+      "formal": 7,
+      "typo_examples": 0
+    },
+    {
+      "intent": "borongan_info",
+      "count": 35,
+      "min_tokens": 5,
+      "max_tokens": 8,
+      "mean_tokens": 6.34,
+      "question_like": 31,
+      "conversational": 3,
+      "formal": 9,
+      "typo_examples": 0
+    },
+    {
+      "intent": "harian_info",
+      "count": 35,
+      "min_tokens": 4,
+      "max_tokens": 8,
+      "mean_tokens": 6.31,
+      "question_like": 32,
+      "conversational": 2,
+      "formal": 10,
+      "typo_examples": 0
+    },
+    {
+      "intent": "pricing_info",
+      "count": 30,
+      "min_tokens": 4,
+      "max_tokens": 8,
+      "mean_tokens": 5.53,
+      "question_like": 26,
+      "conversational": 1,
+      "formal": 7,
+      "typo_examples": 1
+    },
+    {
+      "intent": "start_reservation",
+      "count": 35,
+      "min_tokens": 3,
+      "max_tokens": 6,
+      "mean_tokens": 4.8,
+      "question_like": 3,
+      "conversational": 9,
+      "formal": 23,
+      "typo_examples": 2
+    },
+    {
+      "intent": "reservation_status",
+      "count": 25,
+      "min_tokens": 4,
+      "max_tokens": 7,
+      "mean_tokens": 5.24,
+      "question_like": 13,
+      "conversational": 4,
+      "formal": 18,
+      "typo_examples": 0
+    },
+    {
+      "intent": "goodbye",
+      "count": 25,
+      "min_tokens": 1,
+      "max_tokens": 6,
+      "mean_tokens": 3.12,
+      "question_like": 0,
+      "conversational": 3,
+      "formal": 5,
+      "typo_examples": 0
+    }
+  ]
+}

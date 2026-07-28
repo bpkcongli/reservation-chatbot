@@ -49,9 +49,9 @@ Definition of Done:
 
 ### M1 — Dataset dan NLP baseline
 
-- [ ] `NLP-01` Finalisasi taxonomy 8 intent dan labeling guideline.
-- [ ] `NLP-02` Implement deterministic dataset generator 240 utterance.
-- [ ] `NLP-03` Review manual untuk duplicate, near-duplicate, variasi, dan
+- [x] `NLP-01` Finalisasi taxonomy 8 intent dan labeling guideline.
+- [x] `NLP-02` Implement deterministic dataset generator 240 utterance.
+- [x] `NLP-03` Review manual untuk duplicate, near-duplicate, variasi, dan
   konsistensi label.
 - [ ] `NLP-04` Implement analyzer distribusi intent/panjang teks.
 - [ ] `NLP-05` Implement preprocessing reusable beserta unit test.
@@ -74,13 +74,16 @@ Definition of Done:
 ### M2 — Conversation core
 
 - [ ] `CONV-01` Definisikan enum state, conversation context, dan response DTO.
-- [ ] `CONV-02` Implement session create/get dan prompt pembuka dua pilihan.
-- [ ] `CONV-03` Implement FAQ router berbasis model intent dan confidence.
+- [ ] `CONV-02` Implement session create/get dan prompt pembuka dua pilihan
+  dengan copy ramah sesuai standar customer service.
+- [ ] `CONV-03` Implement FAQ router berbasis model intent dan confidence,
+  termasuk fallback yang sopan dan terarah.
 - [ ] `CONV-04` Implement global commands: batal, menu, bantuan, mulai ulang.
 - [ ] `CONV-05` Implement extractor phone, customer ID tepat 10 digit, nominal
   budget, worker count, date, session, building type, dan ticket number
   `TKT-YYYYMMDD-XXXXXX`.
-- [ ] `CONV-06` Implement slot priority dan validation feedback.
+- [ ] `CONV-06` Implement slot priority dan validation feedback yang tidak
+  menyalahkan pengguna serta menyertakan format benar dan langkah berikutnya.
 - [ ] `CONV-07` Implement JSONL logger dengan masking PII.
 - [ ] `CONV-08` Persist dan restore conversation state/draft.
 - [ ] `CONV-09` Tambahkan unit test state transition dan extractor.
@@ -91,6 +94,8 @@ Definition of Done:
 - State reservasi dapat mengumpulkan dummy slots secara multi-turn.
 - Satu event JSON valid tersimpan untuk setiap turn.
 - Input invalid mempertahankan state dan slot sebelumnya.
+- Copy prompt, fallback, validasi, pembatalan, dan error memenuhi standar bahasa
+  customer service di `03-nlp-and-dialog-design.md`.
 
 ### M3 — Catalog, reservation, pricing, ticketing
 
@@ -185,7 +190,7 @@ namun integrasi conversation menunggu model loader dan state definition.
 | Layer | Fokus |
 |---|---|
 | Unit NLP | Cleaner, tokenizer, label mapping, threshold |
-| Unit domain | Extractor, validator, price, ticket ID, state transition |
+| Unit domain | Extractor, validator, price, ticket ID, state transition, dan copy respons ramah |
 | API integration | Session, messages, upload, confirm, ticket lookup |
 | Frontend component | Quick reply, message state, summary, upload error |
 | E2E | Dua happy path, edit-before-confirm, fallback |

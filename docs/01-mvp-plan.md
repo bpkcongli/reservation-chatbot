@@ -209,6 +209,9 @@ flowchart TD
 - Training dapat direproduksi menggunakan seed tetap.
 - Backend dan frontend memiliki unit test pada aturan bisnis kritis.
 - Chat interface responsif dan dapat digunakan dengan keyboard.
+- Seluruh copy chatbot mengikuti standar bahasa customer service di
+  `03-nlp-and-dialog-design.md`: ramah, sopan, jelas, solutif, dan tidak
+  menyalahkan pengguna.
 
 ## 8. Acceptance criteria end-to-end
 
@@ -221,6 +224,8 @@ flowchart TD
 - [ ] Breakdown kedua layanan identik dengan fixed rate `pricing-v1`.
 - [ ] Pengguna dapat memperbaiki minimal satu slot pada tahap konfirmasi.
 - [ ] Input tidak valid tidak menghapus slot lain yang sudah terkumpul.
+- [ ] Respons normal, validasi, fallback, pembatalan, dan error menggunakan
+  Bahasa Indonesia yang ramah serta memberi langkah berikutnya yang jelas.
 - [ ] Refresh/reconnect dapat melanjutkan conversation selama session ID valid.
 - [ ] Setiap turn tersimpan sebagai satu event JSONL yang valid.
 - [ ] Dataset berisi sekurangnya 200 utterance dan 4 intent; target MVP 240/8.

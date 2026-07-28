@@ -9,9 +9,11 @@ Dokumentasi ini adalah source of truth untuk fase MVP `reservation-chatbot`.
    modular monolith, komponen, data, API, dan keputusan teknologi.
 3. [NLP and dialog design](03-nlp-and-dialog-design.md) — intent, dataset,
    preprocessing, slot filling, state dialog, dan evaluasi model.
-4. [Task breakdown](04-task-breakdown.md) — urutan implementasi dan Definition
+4. [Intent taxonomy and labeling guideline](06-intent-labeling-guideline.md) —
+   aturan keputusan label dan batas antar-intent.
+5. [Task breakdown](04-task-breakdown.md) — urutan implementasi dan Definition
    of Done.
-5. [UAS traceability](05-uas-traceability.md) — pemetaan artefak ke P1–P5.
+6. [UAS traceability](05-uas-traceability.md) — pemetaan artefak ke P1–P5.
 
 ## Kontrak dan diagram
 
@@ -41,7 +43,7 @@ Dokumentasi ini adalah source of truth untuk fase MVP `reservation-chatbot`.
 |---|---|
 | Product scope | Planned |
 | Architecture | Planned |
-| Dataset generation | Not started |
+| Dataset generation | NLP-01–NLP-03 complete |
 | Backend implementation | Not started |
 | Frontend implementation | Not started |
 | Model evaluation | Not started |

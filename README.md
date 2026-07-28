@@ -63,6 +63,8 @@ make build         # Next.js production build
 make check         # semua quality gate di atas
 make db-logs       # ikuti log MySQL
 make db-down       # hentikan service Docker Compose
+make dataset-generate # hasilkan ulang dataset intent 240 baris
+make dataset-review   # audit distribusi, duplicate, dan variasi
 ```
 
 Untuk migration baru:
@@ -93,6 +95,7 @@ Dokumentasi perencanaan:
 - [MVP plan](docs/01-mvp-plan.md)
 - [Architecture foundation](docs/02-architecture-foundation.md)
 - [NLP and dialog design](docs/03-nlp-and-dialog-design.md)
+- [Intent taxonomy and labeling guideline](docs/06-intent-labeling-guideline.md)
 - [Task breakdown](docs/04-task-breakdown.md)
 - [UAS traceability matrix](docs/05-uas-traceability.md)
 - [API contract convention](docs/api-contract/README.md)

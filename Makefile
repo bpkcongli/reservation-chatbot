@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 
 .PHONY: install dev-backend dev-frontend db-up db-down db-logs migrate migration \
-	lint format format-check typecheck test build check
+	dataset-generate dataset-review lint format format-check typecheck test build check
 
 install:
 	uv sync --project apps/backend --dev
@@ -27,6 +27,12 @@ migrate:
 
 migration:
 	uv run --project apps/backend alembic -c apps/backend/alembic.ini revision --autogenerate -m "$(message)"
+
+dataset-generate:
+	uv run --project apps/backend python apps/backend/scripts/generate_intents_dataset.py
+
+dataset-review: dataset-generate
+	uv run --project apps/backend python apps/backend/scripts/review_intents_dataset.py
 
 lint:
 	uv run --project apps/backend ruff check apps/backend

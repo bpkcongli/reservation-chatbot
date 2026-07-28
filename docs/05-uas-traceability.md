@@ -30,7 +30,7 @@ requirement, bukan hanya menghasilkan aplikasi yang berjalan.
 | P4 | Penyebab kesalahan | Evidence-based error analysis | `DOC-04..05` |
 | P4 | Keterbatasan sistem | NLP/dialog/business limitations | `DOC-05` |
 | P5 | Input pengguna | Chat composer + quick reply | `WEB-02..05` |
-| P5 | Respons chatbot | Message renderer | `WEB-03` |
+| P5 | Respons chatbot | Message renderer dengan copy Bahasa Indonesia yang ramah seperti customer service | `CONV-02..06`, `WEB-03` |
 | P5 | Log CSV/JSON | Masked JSONL per turn | `CONV-07`, `DOC-06` |
 | Tambahan | Landing page | Hero, layanan, cara kerja, CTA | `WEB-01` |
 | Tambahan | Bukti reservasi | Ticket card number/status | `TKT-*`, `WEB-07` |
@@ -38,13 +38,15 @@ requirement, bukan hanya menghasilkan aplikasi yang berjalan.
 
 ## Checklist evidence akhir
 
-- [ ] `data/raw/intents.csv` memiliki jumlah yang dilaporkan.
+- [x] `data/raw/intents.csv` memiliki jumlah yang dilaporkan.
 - [ ] Distribution chart/table dihasilkan dari dataset yang sama.
 - [ ] Screenshot contoh preprocessing berasal dari output script.
 - [ ] `metrics.json` dan classification report konsisten.
 - [ ] Confusion matrix memiliki label intent yang terbaca.
 - [ ] Analisis misclassification menyebut contoh aktual, bukan dugaan saja.
 - [ ] Log percakapan demo sudah dimasking.
+- [ ] Sampel prompt, validasi, fallback, pembatalan, dan error memenuhi standar
+  bahasa customer service serta memberi langkah berikutnya.
 - [ ] Screenshot flow menunjukkan prompt awal dua pilihan.
 - [ ] Screenshot flow menunjukkan konfirmasi sebelum tiket.
 - [ ] Screenshot akhir menunjukkan nomor dan status tiket.

@@ -15,6 +15,57 @@ Intent classifier tidak boleh bebas melompati state transaksi. Contohnya,
 saat state meminta nomor telepon, prioritas sistem adalah phone extractor,
 bukan menafsirkan nomor tersebut sebagai intent FAQ.
 
+## 1.1 Standar bahasa respons chatbot
+
+Semua teks yang ditampilkan kepada pengguna harus memakai Bahasa Indonesia yang
+ramah, sopan, jelas, dan solutif seperti customer service. Standar ini berlaku
+untuk prompt pembuka, jawaban FAQ, pertanyaan slot, validasi, fallback,
+ringkasan, konfirmasi, pembatalan, error, serta respons tiket.
+
+Pedoman tone of voice:
+
+- Gunakan sapaan dan kata bantu yang santun, misalnya “Halo”, “mohon”,
+  “silakan”, dan “terima kasih”.
+- Gunakan kata ganti `Anda` secara konsisten. `Kak` boleh dipakai pada sapaan
+  ringan, tetapi jangan mencampur beberapa panggilan dalam satu percakapan.
+- Sampaikan informasi secara ringkas dan langsung; prioritaskan langkah
+  berikutnya yang dapat dilakukan pengguna.
+- Akui input pengguna sebelum meminta data berikutnya bila konteksnya perlu,
+  misalnya “Baik, tanggal surveinya sudah kami catat.”
+- Jangan menyalahkan pengguna. Hindari kata-kata seperti “salah”, “Anda gagal”,
+  “tidak jelas”, sindiran, huruf kapital berlebihan, dan tanda seru beruntun.
+- Jangan menjanjikan hasil yang belum pasti. Reservasi adalah permintaan jadwal,
+  bukan jaminan tukang tersedia atau pekerjaan langsung dimulai.
+- Jangan mengulang data sensitif secara penuh. Nomor telepon dan customer ID
+  yang perlu ditampilkan kembali harus dimasking.
+- Emoji tidak wajib; jika digunakan, maksimal satu emoji yang relevan dan
+  tidak dipakai pada error, penolakan, atau informasi sensitif.
+
+Pola respons yang diwajibkan:
+
+| Situasi | Struktur respons |
+|---|---|
+| Prompt slot | Konteks singkat → data yang diminta → contoh/opsi jika perlu |
+| Input invalid | Permintaan maaf/penanda lembut → alasan spesifik → format benar → minta ulang |
+| Fallback NLP | Nyatakan belum yakin → tawarkan topik yang didukung → tampilkan quick replies |
+| Aksi berhasil | Konfirmasi singkat → ringkasan relevan → langkah berikutnya |
+| Pembatalan | Konfirmasi tanpa menghakimi → jelaskan data/tiket tidak dibuat → tawarkan menu |
+| Error sistem | Minta maaf → jelaskan kendala tanpa detail teknis → sarankan retry yang aman |
+
+Contoh copy:
+
+| Hindari | Gunakan |
+|---|---|
+| “Nomor salah.” | “Maaf, nomor teleponnya belum sesuai. Mohon masukkan nomor Indonesia, misalnya 081234567890.” |
+| “Input tidak jelas.” | “Maaf, saya belum yakin memahami pertanyaan Anda. Silakan pilih topik Borongan, Tukang Harian, harga, atau reservasi.” |
+| “Tanggal tidak valid.” | “Tanggal tersebut belum dapat digunakan. Silakan pilih tanggal hari ini atau setelahnya, misalnya 2 Agustus 2026.” |
+| “Tiket tidak ditemukan.” | “Maaf, tiket tersebut belum ditemukan. Mohon periksa kembali formatnya, misalnya TKT-20260728-AB12CD.” |
+| “Batal.” | “Baik, proses reservasi dibatalkan dan tidak ada tiket yang dibuat. Ada hal lain yang dapat saya bantu?” |
+
+Business rule dan kejujuran informasi tetap lebih penting daripada keramahan.
+Bahasa yang hangat tidak boleh menutupi kegagalan, mengubah status, atau
+menjanjikan layanan yang belum tersedia.
+
 ## 2. Dataset intent
 
 Target dataset awal adalah 240 utterance buatan sendiri dalam Bahasa Indonesia.
@@ -43,10 +94,10 @@ tersebut lebih beragam dan batas antarkelasnya lebih mudah tumpang tindih.
 
 ```csv
 id,text,intent,source
-utt-0001,Halo kak,greeting,synthetic_manual
-utt-0042,Apa saja yang termasuk jasa borongan?,borongan_info,synthetic_manual
-utt-0111,Berapa tarif tukang sehari?,pricing_info,synthetic_manual
-utt-0178,Saya mau pesan tukang untuk besok,start_reservation,synthetic_manual
+utt-0001,Halo,greeting,synthetic_manual
+utt-0058,Pekerjaan apa saja yang masuk layanan borongan?,borongan_info,synthetic_manual
+utt-0129,Berapa tarif tukang harian per hari?,pricing_info,synthetic_manual
+utt-0177,Boking tukang buat besok dong,start_reservation,synthetic_manual
 ```
 
 Dataset generator harus deterministic, namun hasilnya tetap direview manual.
