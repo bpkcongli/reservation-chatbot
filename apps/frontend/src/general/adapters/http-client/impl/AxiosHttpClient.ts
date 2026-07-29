@@ -1,10 +1,11 @@
 import axios, { type AxiosInstance } from "axios";
 import { inject, injectable } from "inversify";
 
-import type {
-  HttpClient,
-  HttpRequest,
-  HttpResponse,
+import {
+  type HttpClient,
+  HttpClientError,
+  type HttpRequest,
+  type HttpResponse,
 } from "@/general/adapters/http-client";
 import { TYPES } from "@/general/services/types";
 
@@ -29,16 +30,29 @@ export default class AxiosHttpClient implements HttpClient {
     body,
     headers,
   }: HttpRequest<TBody>): Promise<HttpResponse<TData>> {
-    const response = await this.client.request<TData>({
-      url: path,
-      method,
-      data: body,
-      headers,
-    });
+    try {
+      const response = await this.client.request<TData>({
+        url: path,
+        method,
+        data: body,
+        headers,
+      });
 
-    return {
-      data: response.data,
-      status: response.status,
-    };
+      return {
+        data: response.data,
+        status: response.status,
+      };
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new HttpClientError(
+          error.response?.data?.status?.message ??
+            "Permintaan ke layanan tidak berhasil.",
+          error.response?.status ?? null,
+          { cause: error },
+        );
+      }
+
+      throw error;
+    }
   }
 }

@@ -55,7 +55,20 @@ const ChatWidget = observer(() => {
         />
       </div>
       {store.isOpen && (
-        <ChatPanel closeButtonRef={closeButtonRef} onClose={store.close} />
+        <ChatPanel
+          canSend={store.canSend}
+          closeButtonRef={closeButtonRef}
+          draftText={store.draftText}
+          errorMessage={store.errorMessage}
+          isLoading={store.isLoading}
+          messages={store.messages}
+          quickReplies={store.quickReplies}
+          onClose={store.close}
+          onDraftChange={store.setDraftText}
+          onQuickReply={(reply) => void store.sendQuickReply(reply)}
+          onRetry={() => void store.retry()}
+          onSend={() => void store.submitDraft()}
+        />
       )}
       <span className="sr-only" aria-live="polite">
         {store.isOpen ? "Panel asisten reservasi terbuka." : ""}

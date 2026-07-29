@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+export const conversationIdSchema = z
+  .string()
+  .length(26)
+  .regex(/^[0-9A-HJKMNP-TV-Z]{26}$/);
+
 export const conversationResponseSchema = z.object({
   status: z.object({
     code: z.union([z.literal(120000000), z.literal(120100000)]),
@@ -7,7 +12,7 @@ export const conversationResponseSchema = z.object({
     errorDetails: z.array(z.unknown()),
   }),
   data: z.object({
-    conversation_id: z.string().length(26),
+    conversation_id: conversationIdSchema,
     state: z.string().min(1),
     messages: z.array(
       z.object({

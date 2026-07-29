@@ -18,4 +18,15 @@ export interface HttpClient {
   ): Promise<HttpResponse<TData>>;
 }
 
+export class HttpClientError extends Error {
+  constructor(
+    message: string,
+    readonly status: number | null,
+    options?: ErrorOptions,
+  ) {
+    super(message, options);
+    this.name = "HttpClientError";
+  }
+}
+
 export { default as AxiosHttpClient } from "./impl/AxiosHttpClient";

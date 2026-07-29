@@ -129,9 +129,9 @@ Definition of Done:
 - [x] `WEB-01` Buat responsive landing page: hero, value proposition, dua jenis
   layanan, cara kerja, CTA.
 - [x] `WEB-02` Buat floating chat launcher dan accessible chat panel.
-- [ ] `WEB-03` Render bot/user bubble, timestamp, loading, error, dan retry.
-- [ ] `WEB-04` Render prompt awal dan quick replies.
-- [ ] `WEB-05` Integrasikan create/restore conversation dan send message.
+- [x] `WEB-03` Render bot/user bubble, timestamp, loading, error, dan retry.
+- [x] `WEB-04` Render prompt awal dan quick replies.
+- [x] `WEB-05` Integrasikan create/restore conversation dan send message.
 - [ ] `WEB-06` Buat UI upload/preview/remove photo.
 - [ ] `WEB-07` Buat reservation summary, price breakdown, confirmation, serta
   ticket card yang dapat disalin.

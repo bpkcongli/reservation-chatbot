@@ -2,6 +2,11 @@ import { inject, injectable } from "inversify";
 
 import type { CreateConversationRequest } from "@/domain/conversation/interfaces/requests/create-conversation-request";
 import {
+  sendMessageRequestSchema,
+  type SendMessageRequest,
+} from "@/domain/conversation/interfaces/requests/send-message-request";
+import {
+  conversationIdSchema,
   conversationResponseSchema,
   type ConversationResponse,
 } from "@/domain/conversation/interfaces/responses/conversation-response";
@@ -24,6 +29,34 @@ export default class ConversationService implements IConversationService {
       path: "/conversations",
       method: "POST",
       body: { locale: "id-ID" },
+    });
+
+    return conversationResponseSchema.parse(response.data);
+  }
+
+  async getConversation(conversationId: string): Promise<ConversationResponse> {
+    const validConversationId = conversationIdSchema.parse(conversationId);
+    const response = await this.httpClient.request<ConversationResponse>({
+      path: `/conversations/${validConversationId}`,
+      method: "GET",
+    });
+
+    return conversationResponseSchema.parse(response.data);
+  }
+
+  async sendMessage(
+    conversationId: string,
+    request: SendMessageRequest,
+  ): Promise<ConversationResponse> {
+    const validConversationId = conversationIdSchema.parse(conversationId);
+    const validRequest = sendMessageRequestSchema.parse(request);
+    const response = await this.httpClient.request<
+      ConversationResponse,
+      SendMessageRequest
+    >({
+      path: `/conversations/${validConversationId}/messages`,
+      method: "POST",
+      body: validRequest,
     });
 
     return conversationResponseSchema.parse(response.data);

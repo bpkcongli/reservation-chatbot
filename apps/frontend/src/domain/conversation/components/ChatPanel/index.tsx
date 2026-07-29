@@ -1,15 +1,53 @@
-import { ArrowUp, Bot, LockKeyhole, MessageCircleMore, X } from "lucide-react";
-import type { Ref } from "react";
+import { ArrowUp, Bot, LockKeyhole, X } from "lucide-react";
+import { useEffect, useRef, type Ref } from "react";
+
+import ChatErrorState from "@/domain/conversation/components/ChatErrorState";
+import ChatMessageBubble from "@/domain/conversation/components/ChatMessageBubble";
+import ChatQuickReplies from "@/domain/conversation/components/ChatQuickReplies";
+import ChatTypingIndicator from "@/domain/conversation/components/ChatTypingIndicator";
+import type {
+  ChatMessage,
+  QuickReply,
+} from "@/domain/conversation/interfaces/entities/conversation";
 
 interface ChatPanelProps {
+  canSend: boolean;
   closeButtonRef: Ref<HTMLButtonElement>;
+  draftText: string;
+  errorMessage: string | null;
+  isLoading: boolean;
+  messages: ChatMessage[];
+  quickReplies: QuickReply[];
   onClose(): void;
+  onDraftChange(value: string): void;
+  onQuickReply(reply: QuickReply): void;
+  onRetry(): void;
+  onSend(): void;
 }
 
 export default function ChatPanel({
+  canSend,
   closeButtonRef,
+  draftText,
+  errorMessage,
+  isLoading,
+  messages,
+  quickReplies,
   onClose,
+  onDraftChange,
+  onQuickReply,
+  onRetry,
+  onSend,
 }: Readonly<ChatPanelProps>) {
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView?.({
+      behavior: "smooth",
+      block: "nearest",
+    });
+  }, [isLoading, messages, quickReplies]);
+
   return (
     <>
       <button
@@ -62,42 +100,78 @@ export default function ChatPanel({
           </div>
         </header>
 
-        <div className="flex flex-1 flex-col overflow-y-auto px-5 py-6">
-          <div className="mx-auto my-auto max-w-[300px] text-center">
-            <span className="mx-auto grid size-16 place-items-center rounded-[22px] bg-[#e6eee9] text-[#173f35]">
-              <MessageCircleMore className="size-7" aria-hidden="true" />
-            </span>
-            <h3 className="mt-5 text-lg font-bold text-[#173f35]">
-              Mulai dari kebutuhan Anda
-            </h3>
-            <p
-              id="chat-panel-description"
-              className="mt-2 text-sm leading-6 text-[#61736d]"
-            >
-              Tanyakan layanan tukang atau mulai reservasi. Percakapan lengkap
-              akan tersedia pada tahap integrasi berikutnya.
-            </p>
-            <div className="mt-5 flex items-center justify-center gap-1.5 text-xs font-medium text-[#6d7d77]">
-              <LockKeyhole className="size-3.5" aria-hidden="true" />
-              Data Anda diproses secara aman
-            </div>
+        <p id="chat-panel-description" className="sr-only">
+          Percakapan dengan asisten untuk informasi layanan dan reservasi
+          tukang.
+        </p>
+
+        <div className="flex flex-1 flex-col overflow-y-auto bg-[#f7f6f1] px-4 py-5">
+          <div
+            aria-live="polite"
+            aria-relevant="additions"
+            className="space-y-4"
+          >
+            {messages.map((message) => (
+              <ChatMessageBubble key={message.id} message={message} />
+            ))}
+
+            {isLoading && <ChatTypingIndicator />}
+
+            {errorMessage && (
+              <ChatErrorState message={errorMessage} onRetry={onRetry} />
+            )}
+
+            {!isLoading && !errorMessage && (
+              <ChatQuickReplies
+                replies={quickReplies}
+                onSelect={onQuickReply}
+              />
+            )}
+
+            {!isLoading && !errorMessage && messages.length > 0 && (
+              <div className="flex items-center justify-center gap-1.5 pt-2 text-[10px] font-medium text-[#89958f]">
+                <LockKeyhole className="size-3" aria-hidden="true" />
+                Data sensitif tidak ditampilkan secara penuh
+              </div>
+            )}
+
+            <div ref={messagesEndRef} aria-hidden="true" />
           </div>
         </div>
 
         <footer className="border-t border-[#e1e5e1] bg-white p-4">
-          <div className="flex items-center gap-2 rounded-2xl border border-[#d7dfda] bg-[#f5f5f1] p-2 pl-4">
-            <span className="flex-1 text-sm text-[#89948f]">
-              Ketik kebutuhan Anda...
-            </span>
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              onSend();
+            }}
+            className="flex items-end gap-2 rounded-2xl border border-[#d7dfda] bg-[#f5f5f1] p-2 pl-4 focus-within:border-[#89aa9e] focus-within:ring-2 focus-within:ring-[#dce9e4]"
+          >
+            <textarea
+              aria-label="Pesan"
+              value={draftText}
+              onChange={(event) => onDraftChange(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  onSend();
+                }
+              }}
+              rows={1}
+              maxLength={1_000}
+              disabled={isLoading || Boolean(errorMessage)}
+              placeholder="Ketik kebutuhan Anda..."
+              className="max-h-20 min-h-10 flex-1 resize-none bg-transparent py-2 text-sm leading-6 text-[#52655e] outline-none placeholder:text-[#89948f] disabled:cursor-not-allowed"
+            />
             <button
-              type="button"
-              disabled
+              type="submit"
+              disabled={!canSend}
               aria-label="Kirim pesan"
-              className="grid size-10 place-items-center rounded-xl bg-[#dfe4e1] text-[#9aa49f]"
+              className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#1d5949] text-white transition hover:bg-[#16483b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d5949] disabled:cursor-not-allowed disabled:bg-[#dfe4e1] disabled:text-[#9aa49f]"
             >
               <ArrowUp className="size-4" aria-hidden="true" />
             </button>
-          </div>
+          </form>
           <p className="mt-2 text-center text-[11px] text-[#8b9691]">
             Asisten memberikan estimasi demo, bukan harga pasar.
           </p>

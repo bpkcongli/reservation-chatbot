@@ -111,6 +111,10 @@ a {
   animation: launcher-ring 2.4s ease-out infinite;
 }
 
+.typing-dot {
+  animation: typing-dot 900ms ease-in-out infinite alternate;
+}
+
 @keyframes hero-reveal {
   from {
     opacity: 0;
@@ -144,6 +148,17 @@ a {
   }
 }
 
+@keyframes typing-dot {
+  from {
+    opacity: 0.35;
+    transform: translateY(1px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -151,7 +166,8 @@ a {
 
   .hero-reveal,
   .chat-panel-enter,
-  .chat-launcher::before {
+  .chat-launcher::before,
+  .typing-dot {
     animation: none;
   }
 }

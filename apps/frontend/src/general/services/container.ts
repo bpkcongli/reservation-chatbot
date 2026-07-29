@@ -7,6 +7,7 @@ import {
   AxiosHttpClient,
   type HttpClient,
 } from "@/general/adapters/http-client";
+import { BrowserStorage, type Storage } from "@/general/adapters/storage";
 import type { ClientEnvironment } from "@/general/interfaces/environment";
 import { TYPES } from "@/general/services/types";
 
@@ -17,6 +18,7 @@ export function createRootContainer(environment: ClientEnvironment): Container {
     .bind<string>(TYPES.ApiBaseUrl)
     .toConstantValue(environment.NEXT_PUBLIC_API_BASE_URL);
   container.bind<HttpClient>(TYPES.HttpClient).to(AxiosHttpClient);
+  container.bind<Storage>(TYPES.Storage).to(BrowserStorage);
 
   const conversationContainer = createConversationContainer(container);
   container
