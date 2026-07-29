@@ -1,6 +1,7 @@
 from logging.config import fileConfig
 
 from alembic import context
+from app.modules.attachment import models as attachment_models
 from app.modules.catalog import models as catalog_models
 from app.modules.conversation import models as conversation_models
 from app.modules.reservation import models as reservation_models
@@ -10,6 +11,7 @@ from app.shared.database import Base
 from sqlalchemy import engine_from_config, pool
 
 _MODEL_MODULES = (
+    attachment_models,
     catalog_models,
     conversation_models,
     reservation_models,

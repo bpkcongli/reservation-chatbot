@@ -102,6 +102,7 @@ Conversation core menyediakan endpoint berikut:
 POST /api/v1/conversations
 GET  /api/v1/conversations/{conversation_id}
 POST /api/v1/conversations/{conversation_id}/messages
+POST /api/v1/conversations/{conversation_id}/attachments
 GET  /api/v1/catalog/services
 GET  /api/v1/catalog/survey-slots?date_from=YYYY-MM-DD&date_to=YYYY-MM-DD
 GET  /api/v1/tickets/{ticket_number}
@@ -122,9 +123,11 @@ dicatat terpisah dan tidak mengubah total estimasi.
 Setelah seluruh slot valid, conversation mengembalikan ringkasan aman dan
 breakdown harga untuk konfirmasi. Pengguna dapat memilih slot yang ingin
 diubah; harga dihitung ulang dari backend bila input harga berubah. Konfirmasi
-dicatat tanpa membuat tiket lebih awal—finalisasi transaksional tetap menjadi
-boundary `RES-04`. Lookup tiket hanya mengembalikan ringkasan aman, status
-`MENUNGGU_PEMBAYARAN`, dan flag simulasi email `NOT_IMPLEMENTED`.
+secara transaksional membuat reservation dan satu tiket berstatus
+`MENUNGGU_PEMBAYARAN`; pembatalan atau input invalid tidak membuat keduanya.
+Tukang Harian dapat menyertakan satu foto opsional JPG, PNG, atau WebP yang
+divalidasi berdasarkan ukuran, ekstensi, MIME, dan magic bytes. Lookup tiket
+hanya mengembalikan ringkasan aman dan flag simulasi email `NOT_IMPLEMENTED`.
 
 Untuk migration baru:
 

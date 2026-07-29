@@ -4,9 +4,14 @@ from functools import lru_cache
 from typing import Annotated
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, File, UploadFile, status
 from sqlalchemy.orm import Session
 
+from app.modules.attachment.repository import (
+    AttachmentRepository,
+    SqlAlchemyAttachmentRepository,
+)
+from app.modules.attachment.service import AttachmentService, LocalAttachmentStorage
 from app.modules.conversation.domain import ChatMessage, ConversationContext
 from app.modules.conversation.logger import (
     ConversationTurnLogger,
@@ -17,6 +22,9 @@ from app.modules.conversation.repository import (
     SqlAlchemyConversationRepository,
 )
 from app.modules.conversation.schemas import (
+    AttachmentData,
+    AttachmentUploadData,
+    AttachmentUploadResponse,
     ChatMessageData,
     ConversationData,
     ConversationResponse,
@@ -29,9 +37,11 @@ from app.modules.conversation.service import (
     ConversationResult,
     ConversationService,
     IntentPredictor,
+    ReservationFinalizer,
     TicketLookup,
 )
 from app.modules.nlp.model import IntentModel, ModelArtifactError, load_intent_model
+from app.modules.reservation.repository import SqlAlchemyReservationFinalizer
 from app.modules.ticketing.repository import SqlAlchemyTicketRepository
 from app.modules.ticketing.service import TicketService
 from app.shared.config import get_settings
@@ -47,6 +57,14 @@ async def get_conversation_repository(
     """Return a transactional repository backed by configured MySQL."""
 
     return SqlAlchemyConversationRepository(session)
+
+
+async def get_attachment_repository(
+    session: Annotated[Session, Depends(get_db_session)],
+) -> AttachmentRepository:
+    """Return attachment metadata storage in the request transaction."""
+
+    return SqlAlchemyAttachmentRepository(session)
 
 
 @lru_cache
@@ -87,6 +105,63 @@ async def get_ticket_lookup(
     """Return ticket lookup backed by the request database session."""
 
     return TicketService(SqlAlchemyTicketRepository(session))
+
+
+async def get_reservation_finalizer(
+    session: Annotated[Session, Depends(get_db_session)],
+) -> ReservationFinalizer:
+    """Use the same request session as conversation persistence."""
+
+    return SqlAlchemyReservationFinalizer(session)
+
+
+@router.post(
+    "/{conversation_id}/attachments",
+    response_model=AttachmentUploadResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def upload_attachment(
+    conversation_id: str,
+    file: Annotated[UploadFile, File()],
+    conversation_repository: Annotated[
+        ConversationRepository,
+        Depends(get_conversation_repository),
+    ],
+    attachment_repository: Annotated[
+        AttachmentRepository,
+        Depends(get_attachment_repository),
+    ],
+) -> AttachmentUploadResponse:
+    settings = get_settings()
+    max_size_bytes = settings.max_upload_mb * 1024 * 1024
+    original_filename = file.filename
+    declared_content_type = file.content_type
+    try:
+        content = await file.read(max_size_bytes + 1)
+    finally:
+        await file.close()
+    attachment = AttachmentService(
+        conversation_repository,
+        attachment_repository,
+        LocalAttachmentStorage(settings.upload_dir),
+        max_size_bytes=max_size_bytes,
+    ).upload(
+        conversation_id,
+        original_filename=original_filename,
+        declared_content_type=declared_content_type,
+        content=content,
+    )
+    return AttachmentUploadResponse(
+        status=SuccessStatus(code=120100000, message="Created."),
+        data=AttachmentUploadData(
+            conversation_id=conversation_id,
+            attachment=AttachmentData(
+                attachment_id=attachment.id,
+                content_type=attachment.content_type,
+                size_bytes=attachment.size_bytes,
+            ),
+        ),
+    )
 
 
 def _message_data(message: ChatMessage) -> ChatMessageData:
@@ -162,12 +237,17 @@ async def send_message(
     predictor: Annotated[IntentPredictor, Depends(get_intent_predictor)],
     turn_logger: Annotated[ConversationTurnLogger, Depends(get_conversation_logger)],
     ticket_lookup: Annotated[TicketLookup, Depends(get_ticket_lookup)],
+    reservation_finalizer: Annotated[
+        ReservationFinalizer,
+        Depends(get_reservation_finalizer),
+    ],
 ) -> ConversationResponse:
     result = ConversationService(
         repository,
         predictor=predictor,
         turn_logger=turn_logger,
         ticket_lookup=ticket_lookup,
+        reservation_finalizer=reservation_finalizer,
         timezone=ZoneInfo(get_settings().app_timezone),
     ).process_message(
         conversation_id,

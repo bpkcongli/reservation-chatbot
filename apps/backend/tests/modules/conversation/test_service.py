@@ -47,6 +47,29 @@ class StubTicketLookup:
         return self.ticket
 
 
+class StubReservationFinalizer:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def finalize(
+        self,
+        context: object,
+        *,
+        created_at: datetime,
+    ) -> TicketView:
+        self.calls += 1
+        return TicketView(
+            ticket_number="TKT-20260729-AB12CD",
+            service_type=ServiceType.BORONGAN,
+            status=TicketStatus.MENUNGGU_PEMBAYARAN,
+            pricing_version="pricing-v1",
+            estimated_price=5_125_000,
+            budget=20_000_000,
+            created_at=created_at,
+            email_delivery=EmailDelivery.NOT_IMPLEMENTED,
+        )
+
+
 def id_factory() -> Iterator[str]:
     for index in range(1, 50):
         yield f"01K1A2B3C4D5E6F7G8H9J{index:04d}"
@@ -57,6 +80,7 @@ def build_service(
     predictor: StubPredictor | None = None,
     turn_logger: CapturingTurnLogger | None = None,
     ticket_lookup: StubTicketLookup | None = None,
+    reservation_finalizer: StubReservationFinalizer | None = None,
 ) -> tuple[ConversationService, InMemoryConversationRepository]:
     identifiers = id_factory()
     repository = InMemoryConversationRepository()
@@ -65,6 +89,7 @@ def build_service(
         predictor=predictor,
         turn_logger=turn_logger,
         ticket_lookup=ticket_lookup,
+        reservation_finalizer=reservation_finalizer,
         clock=lambda: FIXED_NOW,
         id_factory=lambda _: next(identifiers),
     )
@@ -306,8 +331,9 @@ def test_confirmation_can_edit_building_and_recalculate_price() -> None:
     assert updated.context.price_breakdown["estimated_price"] == 7_625_000
 
 
-def test_yes_records_confirmation_without_creating_ticket_before_finalization() -> None:
-    service, _ = build_service()
+def test_yes_finalizes_reservation_and_returns_ticket() -> None:
+    finalizer = StubReservationFinalizer()
+    service, _ = build_service(reservation_finalizer=finalizer)
     created = service.create_conversation()
     for message in (
         "reservation",
@@ -324,10 +350,12 @@ def test_yes_records_confirmation_without_creating_ticket_before_finalization() 
 
     confirmed = service.process_message(created.context.conversation_id, "ya")
 
-    assert confirmed.context.state is ConversationState.CONFIRM_RESERVATION
+    assert finalizer.calls == 1
+    assert confirmed.context.state is ConversationState.TICKET_CREATED
     assert confirmed.context.reservation_confirmed is True
-    assert confirmed.context.ticket is None
-    assert "siap difinalisasi" in confirmed.new_messages[1].text
+    assert confirmed.context.ticket is not None
+    assert confirmed.context.ticket["ticket_number"] == "TKT-20260729-AB12CD"
+    assert "Reservasi berhasil dikonfirmasi" in confirmed.new_messages[1].text
 
 
 def test_cancel_from_confirmation_clears_summary_and_price() -> None:

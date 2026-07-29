@@ -16,7 +16,10 @@ class StubCatalogRepository:
 
 @pytest.fixture(autouse=True)
 def catalog_dependency() -> Iterator[None]:
-    app.dependency_overrides[get_catalog_repository] = lambda: StubCatalogRepository()
+    async def override_repository() -> StubCatalogRepository:
+        return StubCatalogRepository()
+
+    app.dependency_overrides[get_catalog_repository] = override_repository
     yield
     app.dependency_overrides.pop(get_catalog_repository, None)
 

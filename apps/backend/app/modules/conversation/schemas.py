@@ -76,3 +76,22 @@ class ConversationResponse(ConversationSchema):
 
     status: SuccessStatus
     data: ConversationData
+
+
+class AttachmentData(ConversationSchema):
+    """Safe attachment metadata; storage paths and checksums stay private."""
+
+    attachment_id: str = Field(min_length=26, max_length=26)
+    content_type: Literal["image/jpeg", "image/png", "image/webp"]
+    size_bytes: int = Field(gt=0)
+    status: Literal["ready"] = "ready"
+
+
+class AttachmentUploadData(ConversationSchema):
+    conversation_id: str = Field(min_length=26, max_length=26)
+    attachment: AttachmentData
+
+
+class AttachmentUploadResponse(ConversationSchema):
+    status: SuccessStatus
+    data: AttachmentUploadData

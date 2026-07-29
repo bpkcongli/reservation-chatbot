@@ -110,10 +110,10 @@ Definition of Done:
 - [x] `TKT-01` Implement unique ticket number berformat
   `TKT-YYYYMMDD-XXXXXX` dan status.
 - [x] `TKT-02` Implement ticket lookup.
-- [ ] `UPL-01` Implement safe optional photo upload.
-- [ ] `RES-04` Transactionally create reservation + ticket only after
+- [x] `UPL-01` Implement safe optional photo upload.
+- [x] `RES-04` Transactionally create reservation + ticket only after
   confirmation.
-- [ ] `RES-05` Tambahkan integration tests untuk happy path dan invalid path
+- [x] `RES-05` Tambahkan integration tests untuk happy path dan invalid path
   kedua layanan.
 
 Definition of Done:

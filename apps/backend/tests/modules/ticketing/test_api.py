@@ -25,7 +25,11 @@ def ticket_dependency() -> Iterator[None]:
             email_delivery=EmailDelivery.NOT_IMPLEMENTED,
         )
     )
-    app.dependency_overrides[get_ticket_repository] = lambda: repository
+
+    async def override_repository() -> InMemoryTicketRepository:
+        return repository
+
+    app.dependency_overrides[get_ticket_repository] = override_repository
     yield
     app.dependency_overrides.pop(get_ticket_repository, None)
 

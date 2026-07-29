@@ -73,6 +73,16 @@ class TicketLookup(Protocol):
         """Return a safe ticket view or raise an application error."""
 
 
+class ReservationFinalizer(Protocol):
+    def finalize(
+        self,
+        context: ConversationContext,
+        *,
+        created_at: datetime,
+    ) -> TicketView:
+        """Stage one reservation and ticket in the current transaction."""
+
+
 @dataclass(frozen=True, slots=True)
 class ConversationResult:
     """Updated context and messages created by the current operation."""
@@ -96,6 +106,7 @@ class ConversationService:
         *,
         predictor: IntentPredictor | None = None,
         ticket_lookup: TicketLookup | None = None,
+        reservation_finalizer: ReservationFinalizer | None = None,
         turn_logger: ConversationTurnLogger | None = None,
         timezone: ZoneInfo = JAKARTA_TIMEZONE,
         clock: Clock = utc_now,
@@ -104,6 +115,7 @@ class ConversationService:
         self._repository = repository
         self._predictor = predictor
         self._ticket_lookup = ticket_lookup
+        self._reservation_finalizer = reservation_finalizer
         self._turn_logger = turn_logger
         self._timezone = timezone
         self._clock = clock
@@ -259,13 +271,39 @@ class ConversationService:
             service_type = str(context.collected_slots.get("service_type", ""))
             edit_field = parse_edit_field(text, service_type)
             if normalized in {"ya", "iya", "setuju", "konfirmasi"}:
-                state = ConversationState.CONFIRM_RESERVATION
+                if self._reservation_finalizer is None:
+                    raise ApplicationError(
+                        code="RESERVATION_SERVICE_UNAVAILABLE",
+                        message="Maaf, layanan konfirmasi reservasi sedang belum tersedia.",
+                        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                        retryable=True,
+                    )
+                finalized_ticket = self._reservation_finalizer.finalize(
+                    context,
+                    created_at=now.astimezone(self._timezone),
+                )
+                state = ConversationState.TICKET_CREATED
                 response_text = (
-                    "Baik, konfirmasi Anda sudah tercatat. Data reservasi siap "
-                    "difinalisasi menjadi reservasi dan tiket."
+                    f"Reservasi berhasil dikonfirmasi. Nomor tiket Anda "
+                    f"{finalized_ticket.ticket_number} dengan status "
+                    f"{finalized_ticket.status.value}. Estimasi harga fixed "
+                    f"Rp{finalized_ticket.estimated_price:,}. Pengiriman email "
+                    "masih berupa simulasi."
                 )
                 quick_replies = ()
                 reservation_confirmed = True
+                ticket = {
+                    "ticket_number": finalized_ticket.ticket_number,
+                    "service_type": finalized_ticket.service_type.value,
+                    "status": finalized_ticket.status.value,
+                    "pricing_version": finalized_ticket.pricing_version,
+                    "estimated_price": finalized_ticket.estimated_price,
+                    "budget": finalized_ticket.budget,
+                    "created_at": finalized_ticket.created_at.astimezone(
+                        self._timezone
+                    ).isoformat(),
+                    "email_delivery": finalized_ticket.email_delivery.value,
+                }
             elif normalized in {"ubah", "edit", "tidak"}:
                 state = ConversationState.EDIT_SLOT
                 response_text = edit_prompt(service_type)

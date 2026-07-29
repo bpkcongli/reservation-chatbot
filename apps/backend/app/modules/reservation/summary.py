@@ -49,7 +49,9 @@ def build_confirmation_snapshot(
         return summary, borongan_price.model_dump(mode="json")
 
     if service_type == "harian":
-        harian = HarianReservationSlots.model_validate(slots)
+        attachment = slots.get("attachment")
+        schema_slots = {key: value for key, value in slots.items() if key != "attachment"}
+        harian = HarianReservationSlots.model_validate(schema_slots)
         validate_harian_rules(harian, today=today)
         harian_price = calculate_harian_price(
             specialization=harian.specialization,
@@ -69,7 +71,7 @@ def build_confirmation_snapshot(
             "end_date": harian.end_date.isoformat(),
             "work_session": harian.work_session.value,
             "work_address": harian.work_address,
-            "attachment": None,
+            "attachment": attachment if isinstance(attachment, dict) else None,
         }
         return summary, harian_price.model_dump(mode="json")
 

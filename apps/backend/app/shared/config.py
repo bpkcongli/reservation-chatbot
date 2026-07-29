@@ -29,12 +29,21 @@ class Settings(BaseSettings):
     )
     model_path: Path = REPOSITORY_ROOT / "artifacts" / "models" / "intent-classifier.joblib"
     conversation_log_dir: Path = REPOSITORY_ROOT / "data" / "logs"
+    upload_dir: Path = REPOSITORY_ROOT / "storage" / "uploads"
+    max_upload_mb: int = 5
     app_timezone: str = "Asia/Jakarta"
 
-    @field_validator("conversation_log_dir")
+    @field_validator("conversation_log_dir", "upload_dir")
     @classmethod
-    def resolve_conversation_log_dir(cls, value: Path) -> Path:
+    def resolve_repository_path(cls, value: Path) -> Path:
         return value if value.is_absolute() else REPOSITORY_ROOT / value
+
+    @field_validator("max_upload_mb")
+    @classmethod
+    def validate_max_upload_mb(cls, value: int) -> int:
+        if not 1 <= value <= 25:
+            raise ValueError("MAX_UPLOAD_MB must be between 1 and 25.")
+        return value
 
     @field_validator("app_timezone")
     @classmethod

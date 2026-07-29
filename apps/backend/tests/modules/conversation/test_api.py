@@ -8,6 +8,7 @@ from app.modules.conversation.api import (
     get_conversation_logger,
     get_conversation_repository,
     get_intent_predictor,
+    get_reservation_finalizer,
     get_ticket_lookup,
 )
 from app.modules.conversation.logger import NullConversationTurnLogger
@@ -44,6 +45,20 @@ class StubTicketLookup:
         )
 
 
+class StubReservationFinalizer:
+    def finalize(self, context: object, *, created_at: datetime) -> TicketView:
+        return TicketView(
+            ticket_number="TKT-20260729-AB12CD",
+            service_type=ServiceType.BORONGAN,
+            status=TicketStatus.MENUNGGU_PEMBAYARAN,
+            pricing_version="pricing-v1",
+            estimated_price=5_125_000,
+            budget=20_000_000,
+            created_at=created_at,
+            email_delivery=EmailDelivery.NOT_IMPLEMENTED,
+        )
+
+
 @pytest.fixture(autouse=True)
 def conversation_dependencies() -> Iterator[InMemoryConversationRepository]:
     repository = InMemoryConversationRepository()
@@ -69,10 +84,14 @@ def conversation_dependencies() -> Iterator[InMemoryConversationRepository]:
     async def override_ticket_lookup() -> StubTicketLookup:
         return StubTicketLookup()
 
+    async def override_reservation_finalizer() -> StubReservationFinalizer:
+        return StubReservationFinalizer()
+
     app.dependency_overrides[get_conversation_repository] = override_repository
     app.dependency_overrides[get_intent_predictor] = override_predictor
     app.dependency_overrides[get_conversation_logger] = override_logger
     app.dependency_overrides[get_ticket_lookup] = override_ticket_lookup
+    app.dependency_overrides[get_reservation_finalizer] = override_reservation_finalizer
     yield repository
     app.dependency_overrides.clear()
 
