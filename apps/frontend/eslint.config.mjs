@@ -11,5 +11,6 @@ export default defineConfig([
     "build/**",
     "next-env.d.ts",
     "coverage/**",
+    "public/mockServiceWorker.js",
   ]),
 ]);

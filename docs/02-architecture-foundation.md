@@ -71,8 +71,12 @@ runtime utama.
 | Package manager | Bun |
 | Styling | Tailwind CSS |
 | Components | shadcn/ui + Radix primitives |
-| Forms | React Hook Form + Zod bila form non-chat diperlukan |
-| Server state | Native `fetch`; TanStack Query hanya jika kebutuhan cache meningkat |
+| Architecture | Domain-driven frontend dengan dependency injection Inversify |
+| State management | MobX + mobx-react-lite |
+| Forms/validation | Zod; React Hook Form dapat ditambahkan bila form non-chat membutuhkannya |
+| HTTP client | Axios melalui adapter `general/adapters/http-client` |
+| API mock | Mock Service Worker; mock tetap melewati external service dan HTTP adapter |
+| Notification | React Toastify |
 | Quality | ESLint, Prettier, Husky, lint-staged |
 | Testing | Vitest + Testing Library; Playwright untuk happy path |
 
@@ -115,12 +119,29 @@ reservation-chatbot/
 │       ├── src/
 │       │   ├── app/
 │       │   ├── components/
-│       │   │   ├── landing/
-│       │   │   ├── chat/
 │       │   │   └── ui/
-│       │   ├── features/chat/
-│       │   ├── lib/
-│       │   └── types/
+│       │   ├── domain/
+│       │   │   └── [module]/
+│       │   │       ├── components/
+│       │   │       ├── features/
+│       │   │       ├── hooks/
+│       │   │       ├── interfaces/
+│       │   │       │   ├── entities/
+│       │   │       │   ├── requests/
+│       │   │       │   └── responses/
+│       │   │       └── services/
+│       │   │           ├── external/impl/
+│       │   │           ├── internal/impl/
+│       │   │           ├── container.ts
+│       │   │           └── types.ts
+│       │   ├── general/
+│       │   │   ├── adapters/
+│       │   │   ├── components/
+│       │   │   ├── interfaces/
+│       │   │   ├── mocks/
+│       │   │   ├── providers/
+│       │   │   └── services/
+│       │   └── lib/
 │       ├── public/
 │       ├── package.json
 │       └── bun.lock

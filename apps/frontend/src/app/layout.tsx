@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
+import ApplicationProvider from "@/general/providers/ApplicationProvider";
+
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Reservation Chatbot",
-  description: "Reservasi Jasa Borongan dan Tukang Harian melalui chat.",
+  title: "ReservasiTukang — Cari layanan tukang tanpa ribet",
+  description:
+    "Reservasi Jasa Borongan dan Tukang Harian melalui percakapan sederhana.",
 };
 
 export default function RootLayout({
@@ -13,7 +16,9 @@ export default function RootLayout({
 }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="id">
-      <body>{children}</body>
+      <body>
+        <ApplicationProvider>{children}</ApplicationProvider>
+      </body>
     </html>
   );
 }

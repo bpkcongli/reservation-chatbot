@@ -1,26 +1,30 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "react-toastify/dist/ReactToastify.css";
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(0.985 0.005 80);
-  --foreground: oklch(0.22 0.025 50);
+  --background: oklch(0.975 0.012 88);
+  --foreground: oklch(0.29 0.052 166);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.025 50);
-  --primary: oklch(0.57 0.16 45);
-  --primary-foreground: oklch(0.985 0.005 80);
-  --secondary: oklch(0.94 0.025 80);
-  --secondary-foreground: oklch(0.3 0.035 50);
-  --muted: oklch(0.94 0.015 80);
-  --muted-foreground: oklch(0.5 0.025 50);
-  --accent: oklch(0.9 0.05 80);
-  --accent-foreground: oklch(0.3 0.035 50);
+  --card-foreground: oklch(0.29 0.052 166);
+  --primary: oklch(0.64 0.178 37);
+  --primary-foreground: oklch(0.985 0.008 80);
+  --secondary: oklch(0.94 0.023 155);
+  --secondary-foreground: oklch(0.31 0.05 164);
+  --muted: oklch(0.95 0.012 90);
+  --muted-foreground: oklch(0.52 0.025 165);
+  --accent: oklch(0.91 0.035 151);
+  --accent-foreground: oklch(0.31 0.05 164);
   --destructive: oklch(0.58 0.22 27);
-  --border: oklch(0.88 0.02 75);
-  --input: oklch(0.88 0.02 75);
-  --ring: oklch(0.57 0.16 45);
-  --radius: 0.75rem;
+  --border: oklch(0.89 0.018 155);
+  --input: oklch(0.88 0.02 155);
+  --ring: oklch(0.64 0.178 37);
+  --radius: 0.875rem;
+  --font-display: Georgia, "Times New Roman", serif;
+  --toastify-color-success: #287d5e;
+  --toastify-color-error: #c94f39;
 }
 
 @theme inline {
@@ -52,4 +56,102 @@
 
 body {
   @apply bg-background text-foreground antialiased;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.nav-link {
+  @apply focus-visible:outline-primary rounded-md text-sm font-semibold text-[#4d665e] transition hover:text-[#173f35] focus-visible:outline-3 focus-visible:outline-offset-4;
+}
+
+.section-eyebrow {
+  @apply text-primary text-xs font-extrabold tracking-[0.18em];
+}
+
+.section-title {
+  font-family: var(--font-display);
+  @apply text-4xl leading-[1.08] font-bold tracking-[-0.025em] text-[#173f35] sm:text-5xl;
+}
+
+.hero-reveal {
+  animation: hero-reveal 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.chat-panel-enter {
+  transform-origin: bottom right;
+  animation: chat-panel-enter 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.chat-launcher::before {
+  position: absolute;
+  inset: -0.35rem;
+  z-index: -1;
+  border-radius: 9999px;
+  border: 1px solid rgb(23 63 53 / 24%);
+  content: "";
+  animation: launcher-ring 2.4s ease-out infinite;
+}
+
+@keyframes hero-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes chat-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes launcher-ring {
+  from {
+    opacity: 0.55;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .hero-reveal,
+  .chat-panel-enter,
+  .chat-launcher::before {
+    animation: none;
+  }
 }
