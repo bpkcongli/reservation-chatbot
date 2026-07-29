@@ -132,12 +132,12 @@ Definition of Done:
 - [x] `WEB-03` Render bot/user bubble, timestamp, loading, error, dan retry.
 - [x] `WEB-04` Render prompt awal dan quick replies.
 - [x] `WEB-05` Integrasikan create/restore conversation dan send message.
-- [ ] `WEB-06` Buat UI upload/preview/remove photo.
-- [ ] `WEB-07` Buat reservation summary, price breakdown, confirmation, serta
+- [x] `WEB-06` Buat UI upload/preview/remove photo.
+- [x] `WEB-07` Buat reservation summary, price breakdown, confirmation, serta
   ticket card yang dapat disalin.
-- [ ] `WEB-08` Tambahkan mobile behavior, keyboard focus, dan empty/error state.
-- [ ] `WEB-09` Unit/component test state UI kritis.
-- [ ] `WEB-10` Playwright happy path untuk satu Borongan dan satu Harian.
+- [x] `WEB-08` Tambahkan mobile behavior, keyboard focus, dan empty/error state.
+- [x] `WEB-09` Unit/component test state UI kritis.
+- [x] `WEB-10` Playwright happy path untuk satu Borongan dan satu Harian.
 
 Definition of Done:
 

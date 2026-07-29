@@ -19,6 +19,8 @@ mata kuliah Natural Language Processing.
 - Python 3.12
 - [uv](https://docs.astral.sh/uv/)
 - Bun 1.3
+- Node.js 20 untuk Vitest dan Playwright
+- Chromium untuk Playwright (`bunx playwright install chromium`)
 - MySQL 8.x lokal atau Docker dengan Compose plugin
 
 ## Setup
@@ -71,6 +73,7 @@ make format        # Ruff formatter dan Prettier
 make format-check  # verifikasi formatting tanpa mengubah file
 make typecheck     # mypy strict dan TypeScript strict
 make test          # pytest dan Vitest
+make test-e2e      # Playwright happy path Borongan dan Harian
 make build         # Next.js production build
 make check         # semua quality gate di atas
 make db-logs       # ikuti log MySQL

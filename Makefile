@@ -3,7 +3,7 @@ SHELL := /bin/bash
 .PHONY: install dev-backend dev-frontend db-up db-down db-logs migrate migration \
 	dataset-generate dataset-review dataset-analyze preprocessing-examples \
 	nlp-data-artifacts nlp-train nlp-artifacts lint format format-check typecheck \
-	test build check
+	test test-e2e build check
 
 install:
 	uv sync --project apps/backend --dev
@@ -69,7 +69,10 @@ test:
 	uv run --project apps/backend pytest apps/backend/tests
 	bun run --cwd apps/frontend test
 
+test-e2e:
+	bun run --cwd apps/frontend test:e2e
+
 build:
 	bun run --cwd apps/frontend build
 
-check: lint format-check typecheck test build
+check: lint format-check typecheck test test-e2e build

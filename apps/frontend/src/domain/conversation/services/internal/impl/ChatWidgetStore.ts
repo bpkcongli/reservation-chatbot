@@ -9,7 +9,11 @@ import {
 
 import type {
   ChatMessage,
+  ConversationState,
+  PriceBreakdown,
   QuickReply,
+  ReservationSummary,
+  Ticket,
 } from "@/domain/conversation/interfaces/entities/conversation";
 import { sendMessageRequestSchema } from "@/domain/conversation/interfaces/requests/send-message-request";
 import {
@@ -65,16 +69,39 @@ function normalizeMessages(
   });
 }
 
+function attachmentErrorMessage(error: unknown): string {
+  if (error instanceof HttpClientError) {
+    if (error.status === 413) {
+      return "Ukuran foto melebihi batas 5 MB. Silakan pilih foto yang lebih kecil.";
+    }
+    if (error.status === 415) {
+      return "Format atau isi foto belum didukung. Gunakan JPG, PNG, atau WebP.";
+    }
+    if (error.status === 409) {
+      return "Foto tidak dapat ditambahkan pada langkah ini. Silakan lanjutkan percakapan.";
+    }
+  }
+
+  return "Maaf, foto belum berhasil diunggah. Silakan coba kembali.";
+}
+
 @injectable()
 export default class ChatWidgetStore implements IChatWidgetStore {
+  @observable attachmentError: string | null = null;
   @observable conversationId: string | null = null;
   @observable draftText = "";
   @observable errorMessage: string | null = null;
   @observable isOpen = false;
   @observable isLoading = false;
+  @observable isUploadingAttachment = false;
   @observable messages: ChatMessage[] = [];
+  @observable priceBreakdown: PriceBreakdown | null = null;
   @observable quickReplies: QuickReply[] = [];
+  @observable reservationSummary: ReservationSummary | null = null;
+  @observable state: ConversationState | null = null;
+  @observable ticket: Ticket | null = null;
 
+  private attachmentNeedsSync = false;
   private pendingTurn: PendingTurn | null = null;
 
   constructor(
@@ -85,6 +112,7 @@ export default class ChatWidgetStore implements IChatWidgetStore {
   ) {
     makeObservable(this);
 
+    this.clearAttachmentError = this.clearAttachmentError.bind(this);
     this.close = this.close.bind(this);
     this.initializeConversation = this.initializeConversation.bind(this);
     this.open = this.open.bind(this);
@@ -94,16 +122,22 @@ export default class ChatWidgetStore implements IChatWidgetStore {
     this.setDraftText = this.setDraftText.bind(this);
     this.submitDraft = this.submitDraft.bind(this);
     this.toggle = this.toggle.bind(this);
+    this.uploadAttachment = this.uploadAttachment.bind(this);
   }
 
   @computed get canSend(): boolean {
     return (
       Boolean(this.conversationId) &&
       !this.isLoading &&
+      !this.isUploadingAttachment &&
       !this.errorMessage &&
       this.draftText.trim().length > 0 &&
       this.draftText.trim().length <= 1_000
     );
+  }
+
+  @action clearAttachmentError(): void {
+    this.attachmentError = null;
   }
 
   @action close(): void {
@@ -167,6 +201,11 @@ export default class ChatWidgetStore implements IChatWidgetStore {
         this.conversationId = response.data.conversation_id;
         this.messages = normalizeMessages(response);
         this.quickReplies = response.data.quick_replies;
+        this.priceBreakdown = response.data.price_breakdown;
+        this.reservationSummary = response.data.reservation_summary;
+        this.state = response.data.state;
+        this.ticket = response.data.ticket;
+        this.attachmentError = null;
         this.errorMessage = null;
         this.isLoading = false;
       });
@@ -196,7 +235,12 @@ export default class ChatWidgetStore implements IChatWidgetStore {
   }
 
   async sendMessage(text: string, displayText = text): Promise<void> {
-    if (!this.conversationId || this.isLoading || this.pendingTurn) {
+    if (
+      !this.conversationId ||
+      this.isLoading ||
+      this.isUploadingAttachment ||
+      this.pendingTurn
+    ) {
       return;
     }
 
@@ -226,6 +270,7 @@ export default class ChatWidgetStore implements IChatWidgetStore {
       this.draftText = "";
       this.errorMessage = null;
       this.isLoading = true;
+      this.attachmentError = null;
       this.quickReplies = [];
       this.messages.push({
         id: pendingTurn.optimisticMessageId,
@@ -301,6 +346,10 @@ export default class ChatWidgetStore implements IChatWidgetStore {
           ...newMessages,
         ];
         this.quickReplies = response.data.quick_replies;
+        this.priceBreakdown = response.data.price_breakdown;
+        this.reservationSummary = response.data.reservation_summary;
+        this.state = response.data.state;
+        this.ticket = response.data.ticket;
         this.errorMessage = null;
         this.isLoading = false;
         this.pendingTurn = null;
@@ -309,6 +358,59 @@ export default class ChatWidgetStore implements IChatWidgetStore {
       runInAction(() => {
         this.errorMessage = "Maaf, pesan belum terkirim. Silakan coba kembali.";
         this.isLoading = false;
+      });
+    }
+  }
+
+  async uploadAttachment(file: File): Promise<void> {
+    const conversationId = this.conversationId;
+
+    if (
+      !conversationId ||
+      this.state !== "HARIAN_ASK_PHOTO" ||
+      this.isLoading ||
+      this.isUploadingAttachment
+    ) {
+      return;
+    }
+
+    runInAction(() => {
+      this.attachmentError = null;
+      this.isUploadingAttachment = true;
+    });
+
+    try {
+      if (!this.attachmentNeedsSync) {
+        await this.conversationService.uploadAttachment(conversationId, file);
+        this.attachmentNeedsSync = true;
+      }
+      const response =
+        await this.conversationService.getConversation(conversationId);
+      const existingMessages = new Map(
+        this.messages.map((message) => [message.id, message]),
+      );
+      const restoredMessages = normalizeMessages(response).map((message) => {
+        const existing = existingMessages.get(message.id);
+        return existing?.sender === "user" ? existing : message;
+      });
+
+      runInAction(() => {
+        this.messages = restoredMessages;
+        this.quickReplies = response.data.quick_replies;
+        this.priceBreakdown = response.data.price_breakdown;
+        this.reservationSummary = response.data.reservation_summary;
+        this.state = response.data.state;
+        this.ticket = response.data.ticket;
+        this.attachmentError = null;
+        this.isUploadingAttachment = false;
+        this.attachmentNeedsSync = false;
+      });
+    } catch (error) {
+      runInAction(() => {
+        this.attachmentError = this.attachmentNeedsSync
+          ? "Foto sudah tersimpan, tetapi langkah berikutnya belum termuat. Tekan tombol sekali lagi untuk melanjutkan."
+          : attachmentErrorMessage(error);
+        this.isUploadingAttachment = false;
       });
     }
   }

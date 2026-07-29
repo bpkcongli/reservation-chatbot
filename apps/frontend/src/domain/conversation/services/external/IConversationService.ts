@@ -1,5 +1,8 @@
 import type { SendMessageRequest } from "@/domain/conversation/interfaces/requests/send-message-request";
-import type { ConversationResponse } from "@/domain/conversation/interfaces/responses/conversation-response";
+import type {
+  AttachmentUploadResponse,
+  ConversationResponse,
+} from "@/domain/conversation/interfaces/responses/conversation-response";
 
 export interface IConversationService {
   createConversation(): Promise<ConversationResponse>;
@@ -8,4 +11,8 @@ export interface IConversationService {
     conversationId: string,
     request: SendMessageRequest,
   ): Promise<ConversationResponse>;
+  uploadAttachment(
+    conversationId: string,
+    file: File,
+  ): Promise<AttachmentUploadResponse>;
 }

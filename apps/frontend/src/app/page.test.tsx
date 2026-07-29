@@ -52,6 +52,8 @@ describe("Home", () => {
       name: "Asisten Reservasi",
     });
     expect(dialog).toBeInTheDocument();
+    expect(dialog).toHaveAttribute("aria-modal", "true");
+    expect(document.body).toHaveStyle({ overflow: "hidden" });
 
     const closeButton = screen.getByRole("button", {
       name: "Tutup asisten reservasi",
@@ -69,6 +71,27 @@ describe("Home", () => {
     expect(
       screen.getByRole("button", { name: "Buka asisten reservasi" }),
     ).toHaveFocus();
+    expect(document.body).not.toHaveStyle({ overflow: "hidden" });
+  });
+
+  it("keeps keyboard focus inside the open dialog", async () => {
+    renderHome();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Buka asisten reservasi" }),
+    );
+    await screen.findByText(/Selamat datang di layanan reservasi tukang/i);
+
+    const closeButton = screen.getByRole("button", {
+      name: "Tutup asisten reservasi",
+    });
+    const composer = screen.getByRole("textbox", { name: "Pesan" });
+    closeButton.focus();
+
+    fireEvent.keyDown(document, { key: "Tab", shiftKey: true });
+    expect(composer).toHaveFocus();
+
+    fireEvent.keyDown(document, { key: "Tab" });
+    expect(closeButton).toHaveFocus();
   });
 
   it("sends an initial quick reply and renders the next turn", async () => {

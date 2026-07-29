@@ -1,43 +1,69 @@
 import { ArrowUp, Bot, LockKeyhole, X } from "lucide-react";
 import { useEffect, useRef, type Ref } from "react";
 
+import ChatEmptyState from "@/domain/conversation/components/ChatEmptyState";
 import ChatErrorState from "@/domain/conversation/components/ChatErrorState";
 import ChatMessageBubble from "@/domain/conversation/components/ChatMessageBubble";
+import ChatPhotoUpload from "@/domain/conversation/components/ChatPhotoUpload";
 import ChatQuickReplies from "@/domain/conversation/components/ChatQuickReplies";
 import ChatTypingIndicator from "@/domain/conversation/components/ChatTypingIndicator";
+import ReservationSummaryCard from "@/domain/conversation/components/ReservationSummaryCard";
+import TicketCard from "@/domain/conversation/components/TicketCard";
 import type {
   ChatMessage,
+  ConversationState,
+  PriceBreakdown,
   QuickReply,
+  ReservationSummary,
+  Ticket,
 } from "@/domain/conversation/interfaces/entities/conversation";
 
 interface ChatPanelProps {
+  attachmentError: string | null;
   canSend: boolean;
   closeButtonRef: Ref<HTMLButtonElement>;
+  dialogRef: Ref<HTMLElement>;
   draftText: string;
   errorMessage: string | null;
   isLoading: boolean;
+  isUploadingAttachment: boolean;
   messages: ChatMessage[];
+  priceBreakdown: PriceBreakdown | null;
   quickReplies: QuickReply[];
+  reservationSummary: ReservationSummary | null;
+  state: ConversationState | null;
+  ticket: Ticket | null;
+  onClearAttachmentError(): void;
   onClose(): void;
   onDraftChange(value: string): void;
   onQuickReply(reply: QuickReply): void;
   onRetry(): void;
   onSend(): void;
+  onUploadAttachment(file: File): Promise<void>;
 }
 
 export default function ChatPanel({
+  attachmentError,
   canSend,
   closeButtonRef,
+  dialogRef,
   draftText,
   errorMessage,
   isLoading,
+  isUploadingAttachment,
   messages,
+  priceBreakdown,
   quickReplies,
+  reservationSummary,
+  state,
+  ticket,
+  onClearAttachmentError,
   onClose,
   onDraftChange,
   onQuickReply,
   onRetry,
   onSend,
+  onUploadAttachment,
 }: Readonly<ChatPanelProps>) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -46,7 +72,16 @@ export default function ChatPanel({
       behavior: "smooth",
       block: "nearest",
     });
-  }, [isLoading, messages, quickReplies]);
+  }, [
+    isLoading,
+    isUploadingAttachment,
+    messages,
+    priceBreakdown,
+    quickReplies,
+    reservationSummary,
+    state,
+    ticket,
+  ]);
 
   return (
     <>
@@ -59,13 +94,15 @@ export default function ChatPanel({
       />
 
       <section
+        ref={dialogRef}
         id="reservation-chat-panel"
         role="dialog"
+        aria-modal="true"
         aria-labelledby="chat-panel-title"
         aria-describedby="chat-panel-description"
-        className="chat-panel-enter fixed inset-0 z-50 flex flex-col overflow-hidden bg-[#fbfaf6] shadow-2xl sm:inset-auto sm:right-7 sm:bottom-24 sm:h-[min(670px,calc(100vh-8rem))] sm:w-[410px] sm:rounded-[28px] sm:border sm:border-[#dce4de]"
+        className="chat-panel-enter fixed inset-0 z-50 flex h-[100dvh] w-screen flex-col overflow-hidden overscroll-contain bg-[#fbfaf6] shadow-2xl sm:inset-auto sm:right-7 sm:bottom-24 sm:h-[min(670px,calc(100dvh-8rem))] sm:w-[410px] sm:rounded-[28px] sm:border sm:border-[#dce4de]"
       >
-        <header className="relative overflow-hidden bg-[#173f35] px-5 pt-5 pb-6 text-white">
+        <header className="relative overflow-hidden bg-[#173f35] px-5 pt-[max(1.25rem,env(safe-area-inset-top))] pb-5 text-white sm:pt-5 sm:pb-6">
           <div
             aria-hidden="true"
             className="absolute -top-12 -right-12 size-36 rounded-full border-[24px] border-white/5"
@@ -105,7 +142,7 @@ export default function ChatPanel({
           tukang.
         </p>
 
-        <div className="flex flex-1 flex-col overflow-y-auto bg-[#f7f6f1] px-4 py-5">
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain bg-[#f7f6f1] px-4 py-5">
           <div
             aria-live="polite"
             aria-relevant="additions"
@@ -115,13 +152,35 @@ export default function ChatPanel({
               <ChatMessageBubble key={message.id} message={message} />
             ))}
 
+            {!isLoading && !errorMessage && messages.length === 0 && (
+              <ChatEmptyState />
+            )}
+
             {isLoading && <ChatTypingIndicator />}
 
             {errorMessage && (
               <ChatErrorState message={errorMessage} onRetry={onRetry} />
             )}
 
-            {!isLoading && !errorMessage && (
+            {!isLoading && !errorMessage && state === "HARIAN_ASK_PHOTO" && (
+              <ChatPhotoUpload
+                errorMessage={attachmentError}
+                isUploading={isUploadingAttachment}
+                onClearError={onClearAttachmentError}
+                onUpload={onUploadAttachment}
+              />
+            )}
+
+            {reservationSummary && priceBreakdown && (
+              <ReservationSummaryCard
+                priceBreakdown={priceBreakdown}
+                summary={reservationSummary}
+              />
+            )}
+
+            {ticket && <TicketCard ticket={ticket} />}
+
+            {!isLoading && !isUploadingAttachment && !errorMessage && (
               <ChatQuickReplies
                 replies={quickReplies}
                 onSelect={onQuickReply}
@@ -139,7 +198,7 @@ export default function ChatPanel({
           </div>
         </div>
 
-        <footer className="border-t border-[#e1e5e1] bg-white p-4">
+        <footer className="border-t border-[#e1e5e1] bg-white px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-4">
           <form
             onSubmit={(event) => {
               event.preventDefault();
@@ -159,7 +218,9 @@ export default function ChatPanel({
               }}
               rows={1}
               maxLength={1_000}
-              disabled={isLoading || Boolean(errorMessage)}
+              disabled={
+                isLoading || isUploadingAttachment || Boolean(errorMessage)
+              }
               placeholder="Ketik kebutuhan Anda..."
               className="max-h-20 min-h-10 flex-1 resize-none bg-transparent py-2 text-sm leading-6 text-[#52655e] outline-none placeholder:text-[#89948f] disabled:cursor-not-allowed"
             />

@@ -6,8 +6,10 @@ import {
   type SendMessageRequest,
 } from "@/domain/conversation/interfaces/requests/send-message-request";
 import {
+  attachmentUploadResponseSchema,
   conversationIdSchema,
   conversationResponseSchema,
+  type AttachmentUploadResponse,
   type ConversationResponse,
 } from "@/domain/conversation/interfaces/responses/conversation-response";
 import type { IConversationService } from "@/domain/conversation/services/external";
@@ -60,5 +62,25 @@ export default class ConversationService implements IConversationService {
     });
 
     return conversationResponseSchema.parse(response.data);
+  }
+
+  async uploadAttachment(
+    conversationId: string,
+    file: File,
+  ): Promise<AttachmentUploadResponse> {
+    const validConversationId = conversationIdSchema.parse(conversationId);
+    const body = new FormData();
+    body.append("file", file);
+    const response = await this.httpClient.request<
+      AttachmentUploadResponse,
+      FormData
+    >({
+      path: `/conversations/${validConversationId}/attachments`,
+      method: "POST",
+      body,
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    return attachmentUploadResponseSchema.parse(response.data);
   }
 }
