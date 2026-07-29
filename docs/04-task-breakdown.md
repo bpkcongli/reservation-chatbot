@@ -152,10 +152,10 @@ Definition of Done:
 - [ ] `QA-02` Uji acceptance criteria di `01-mvp-plan.md`.
 - [ ] `DOC-01` Update README setup, environment, migration, train, evaluate,
   run, dan demo commands.
-- [ ] `DOC-02` Masukkan hasil aktual distribusi data dan preprocessing ke
+- [x] `DOC-02` Masukkan hasil aktual distribusi data dan preprocessing ke
   laporan.
-- [ ] `DOC-03` Masukkan metrics, classification report, dan confusion matrix.
-- [ ] `DOC-04` Analisis pasangan intent paling sering salah dari evidence.
+- [x] `DOC-03` Masukkan metrics, classification report, dan confusion matrix.
+- [x] `DOC-04` Analisis pasangan intent paling sering salah dari evidence.
 - [ ] `DOC-05` Dokumentasikan penyebab error dan keterbatasan sistem.
 - [ ] `DOC-06` Simpan contoh log percakapan yang sudah dianonimkan.
 - [ ] `DOC-07` Siapkan screenshot/video demo dua flow serta skenario fallback.

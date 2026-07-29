@@ -14,6 +14,9 @@ Dokumentasi ini adalah source of truth untuk fase MVP `reservation-chatbot`.
 5. [Task breakdown](04-task-breakdown.md) — urutan implementasi dan Definition
    of Done.
 6. [UAS traceability](05-uas-traceability.md) — pemetaan artefak ke P1–P5.
+7. [Laporan dataset dan evaluasi NLP](07-nlp-evaluation-report.md) — hasil
+   aktual distribusi, preprocessing, metrik, confusion matrix, dan analisis
+   misclassification.
 
 ## Kontrak dan diagram
 
@@ -43,8 +46,8 @@ Dokumentasi ini adalah source of truth untuk fase MVP `reservation-chatbot`.
 |---|---|
 | Product scope | Planned |
 | Architecture | Planned |
-| Dataset generation and preprocessing | NLP-01–NLP-06 complete |
+| Dataset generation and preprocessing | Complete; hasil aktual terdokumentasi |
 | Backend implementation | Not started |
 | Frontend implementation | Not started |
-| Model evaluation | Not started |
-| UAS report/evidence | Not started |
+| Model evaluation | Complete; DOC-03 terdokumentasi |
+| UAS report/evidence | DOC-02–DOC-04 complete |

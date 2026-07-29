@@ -14,20 +14,20 @@ requirement, bukan hanya menghasilkan aplikasi yang berjalan.
 | P1 | Struktur log percakapan | JSONL event schema | `CONV-07` |
 | P2 | Minimal 200 data | Target 240 utterance | `NLP-02` |
 | P2 | Minimal 4 intent | Target 8 intent | `NLP-01` |
-| P2 | Distribusi per intent | `dataset-distribution.csv` dan statistik panjang teks | `NLP-04` |
+| P2 | Distribusi per intent | `dataset-distribution.csv`, statistik panjang teks, dan [laporan hasil aktual](07-nlp-evaluation-report.md#2-hasil-dataset-dan-preprocessing-doc-02) | `NLP-04`, `DOC-02` |
 | P2 | Lowercase, cleaning, tokenization | Shared preprocessing pipeline | `NLP-05` |
 | P2 | Representasi teks | TF-IDF unigram/bigram | `NLP-07` |
-| P2 | Contoh sebelum/sesudah | Generated `preprocessing-examples.csv` | `NLP-06` |
+| P2 | Contoh sebelum/sesudah | Generated `preprocessing-examples.csv` dan [tabel laporan](07-nlp-evaluation-report.md#23-hasil-preprocessing-aktual) | `NLP-06`, `DOC-02` |
 | P3 | Intent classification | Logistic Regression pipeline | `NLP-07`, `CONV-03` |
 | P3 | Rule-based slot filling | Regex/pattern dan state-aware extractor | `CONV-05..06` |
 | P3 | Validasi identifier | Customer ID tepat 10 digit dan tiket `TKT-YYYYMMDD-XXXXXX` | `CONV-05..06`, `TKT-01` |
 | P3 | Multi-turn | Persisted finite state machine | `CONV-01..09` |
 | P3 | Minimal satu konfirmasi | Summary → ya/ubah/batal | `RES-03..04` |
-| P4 | Accuracy | `metrics.json` | `NLP-09` |
-| P4 | Precision/recall/F1 | Classification report per class + averages | `NLP-09` |
-| P4 | Confusion matrix | CSV dan PNG | `NLP-09` |
-| P4 | Intent paling sering salah | Pasangan off-diagonal terbesar + examples | `DOC-04` |
-| P4 | Penyebab kesalahan | Evidence-based error analysis | `DOC-04..05` |
+| P4 | Accuracy | `metrics.json` dan [laporan metrik aktual](07-nlp-evaluation-report.md#31-metrik-keseluruhan) | `NLP-09`, `DOC-03` |
+| P4 | Precision/recall/F1 | Classification report per class + averages dan [tabel laporan](07-nlp-evaluation-report.md#32-classification-report) | `NLP-09`, `DOC-03` |
+| P4 | Confusion matrix | CSV, PNG, dan [matriks dalam laporan](07-nlp-evaluation-report.md#33-confusion-matrix) | `NLP-09`, `DOC-03` |
+| P4 | Intent paling sering salah | [Pasangan off-diagonal terbesar + examples](07-nlp-evaluation-report.md#4-analisis-intent-yang-paling-sering-salah-doc-04) | `DOC-04` |
+| P4 | Penyebab kesalahan | [Evidence-based error analysis](07-nlp-evaluation-report.md#42-evidence-utterance-harian_info--pricing_info) | `DOC-04..05` |
 | P4 | Keterbatasan sistem | NLP/dialog/business limitations | `DOC-05` |
 | P5 | Input pengguna | Chat composer + quick reply | `WEB-02..05` |
 | P5 | Respons chatbot | Message renderer dengan copy Bahasa Indonesia yang ramah seperti customer service | `CONV-02..06`, `WEB-03` |
@@ -42,9 +42,9 @@ requirement, bukan hanya menghasilkan aplikasi yang berjalan.
 - [x] Distribution table dan statistik panjang dihasilkan dari dataset yang sama.
 - [x] `preprocessing-examples.csv` dihasilkan oleh reusable preprocessing.
 - [ ] Screenshot contoh preprocessing berasal dari output script.
-- [ ] `metrics.json` dan classification report konsisten.
-- [ ] Confusion matrix memiliki label intent yang terbaca.
-- [ ] Analisis misclassification menyebut contoh aktual, bukan dugaan saja.
+- [x] `metrics.json` dan classification report konsisten.
+- [x] Confusion matrix memiliki label intent yang terbaca.
+- [x] Analisis misclassification menyebut contoh aktual, bukan dugaan saja.
 - [ ] Log percakapan demo sudah dimasking.
 - [ ] Sampel prompt, validasi, fallback, pembatalan, dan error memenuhi standar
   bahasa customer service serta memberi langkah berikutnya.

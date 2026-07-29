@@ -163,6 +163,7 @@ Dokumentasi perencanaan:
 - [Intent taxonomy and labeling guideline](docs/06-intent-labeling-guideline.md)
 - [Task breakdown](docs/04-task-breakdown.md)
 - [UAS traceability matrix](docs/05-uas-traceability.md)
+- [NLP dataset and evaluation report](docs/07-nlp-evaluation-report.md)
 - [API contract convention](docs/api-contract/README.md)
 - [OpenAPI contract](docs/api-contract/openapi.yml)
 - [Sequence diagram](docs/diagram/sequence-diagram.md)
